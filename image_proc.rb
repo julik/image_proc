@@ -43,3 +43,5 @@ class ImageProcSips < ImageProc
     raise_on_err("sips -s format jpeg --resampleWidth #{@x} #{@source} --out #{@dest}")
   end
 end
+
+require 'image_proc_test' if $0 == __FILE__
