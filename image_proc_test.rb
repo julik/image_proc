@@ -60,7 +60,7 @@ module ProcessorTest
     end
   end
   
-  def test_resize_fitting_proportionally
+  def test_resize_fitting_proportionally_into_square
     with_each_horizontal_path_and_name do | source, name |
       assert_nothing_raised do
         path, w, h  = @processor.resize_fit(source, OUTPUTS + '/' + name, 300, 300)
@@ -79,6 +79,32 @@ module ProcessorTest
       assert File.exist?(result_p), "#{result_p} should have been created"
       assert_equal [200, 300 ], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been fit into rect proortionally"
     end
+  end
+  
+  def test_resize_fitting_proportionally_into_portrait
+    with_each_horizontal_path_and_name do | source, name |
+      assert_nothing_raised do
+        path, w, h  = @processor.resize_fit(source, OUTPUTS + '/' + name, 20, 100)
+        assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result as first ret"
+      end
+
+      result_p = OUTPUTS + '/' + File.basename(source)
+      assert File.exist?(result_p), "#{result_p} should have been created"
+      assert_equal [20, 13], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been fit into rect proortionally"
+    end
+  end
+  
+  def test_resize_fitting_proportionally_into_landscape
+     with_each_vertical_path_and_name do | source, name |
+       assert_nothing_raised do
+         path, w, h  = @processor.resize_fit(source, OUTPUTS + '/' + name, 100, 20)
+         assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result as first ret"
+       end
+
+       result_p = OUTPUTS + '/' + File.basename(source)
+       assert File.exist?(result_p), "#{result_p} should have been created"
+       assert_equal [13, 20], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been fit into rect proortionally"
+     end
   end
   
   def test_replaces_wildcards_in_filenames_after_resizing
@@ -191,11 +217,9 @@ end
 
 class TestQuickProcessViaClass < Test::Unit::TestCase
   def test_works
-    source = File.expand_path File.dirname(__FILE__) + '/horizontal.jpg'
-    dest = '/tmp/resized.jpg'
-    assert_nothing_raised do
-      ImageProc.resize(source, dest, "50x50")
-    end
+    source = File.dirname(__FILE__) + '/input/horizontal.jpg'
+    dest = File.dirname(__FILE__) + '/output/resized.jpg'
+    assert_nothing_raised { ImageProc.resize(source, dest, "50x50") }
   end
 end
 
