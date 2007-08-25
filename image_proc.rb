@@ -3,6 +3,9 @@
 #
 #    width, height = ImageProc.get_bounds("image.png")
 #    thumb_filename = ImageProc.resize("image.png", "thumb.png", "50x50")
+#
+# The whole idea is: a backend does not have to support cropping (we don't do it), it has only to be able to resize,
+# and a backend should have 2 public methods. That's the game.
 require 'open3'
 
 class ImageProc
