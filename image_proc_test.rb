@@ -40,16 +40,19 @@ module ProcessorTest
   
   def test_resize_raises_when_trying_to_overwrite
     assert_raise(ImageProc::Error) do
-      @processor.resize INPUTS + '/' + @landscapes[0], INPUTS + '/' + @portraits[2], "100x100"
+      @processor.resize INPUTS + '/' + @landscapes[0], INPUTS + '/' + @portraits[0], "100x100"
     end
   end
   
-  def test_exact_resize
+  def test_resize_exact
     names = (@landscapes  + @portraits)
     sources = names.map{|file| INPUTS + "/" + file }
 
     sources.each_with_index do | source, index |
-      @processor.resize_exact(source, OUTPUTS + '/' + names[index], 65, 65)
+      assert_nothing_raised do
+        path, w, h  = @processor.resize_exact(source, OUTPUTS + '/' + names[index], 65, 65)
+        assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result as first ret"
+      end
       
       result_p = OUTPUTS + '/' + File.basename(source)
       assert File.exist?(result_p), "#{result_p} should have been created"
@@ -57,12 +60,12 @@ module ProcessorTest
     end
   end
   
-  def test_resize_is_alias_for_fit_with_geometry_string
-    names = (@landscapes  + @portraits)
-    sources = names.map{|file| INPUTS + "/" + file }
-    
+  def test_resize_fitting_proportionally
     with_each_horizontal_path_and_name do | source, name |
-      assert_nothing_raised { @processor.resize(source, OUTPUTS + '/' + name, "300x300") }
+      assert_nothing_raised do
+        path, w, h  = @processor.resize_fit(source, OUTPUTS + '/' + name, 300, 300)
+        assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result as first ret"
+      end
       
       result_p = OUTPUTS + '/' + File.basename(source)
       assert File.exist?(result_p), "#{result_p} should have been created"
@@ -70,7 +73,7 @@ module ProcessorTest
     end
     
     with_each_vertical_path_and_name do | source, name |
-      assert_nothing_raised { @processor.resize(source, OUTPUTS + '/' + name, "300x300") }
+      assert_nothing_raised { @processor.resize_fit(source, OUTPUTS + '/' + name, 300, 300) }
       
       result_p = OUTPUTS + '/' + File.basename(source)
       assert File.exist?(result_p), "#{result_p} should have been created"
@@ -78,10 +81,87 @@ module ProcessorTest
     end
   end
   
-  # def test_exact_resize_raises_when_destination_directory_does_not_exist
-  # def test_resize_fit
-  # def test_resize_fit_width
-  # def test_resize_fit_height
+  def test_replaces_wildcards_in_filenames_after_resizing
+    source = INPUTS + '/' + @landscapes[0]
+    with_wildcards = OUTPUTS + '/resized_%dx%d' + File.extname(@landscapes[0])
+    reference_path = with_wildcards % [300, 200]
+    assert_nothing_raised do
+      path, w, h  = @processor.resize_fit(source, with_wildcards, 300, 300)
+      assert_equal path, reference_path, "The wildcards should be replaced with computed width and height and the file saved"
+      assert_equal [300, 200], get_bounds(reference_path)
+    end
+  end
+  
+  
+
+  def test_resize_is_alias_for_fit_with_geometry_string
+     with_each_horizontal_path_and_name do | source, name |
+       assert_nothing_raised { @processor.resize(source, OUTPUTS + '/' + name, "300x300") }
+     
+       result_p = OUTPUTS + '/' + File.basename(source)
+       assert File.exist?(result_p), "#{result_p} should have been created"
+       assert_equal [300, 200], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been fit into rect proortionally"
+     end
+   
+     with_each_vertical_path_and_name do | source, name |
+       assert_nothing_raised do
+          path = @processor.resize(source, OUTPUTS + '/' + name, "300x300")
+          assert_kind_of String, path, "ImageProc#resize is legacy so it should return the path and nothing else"
+          assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result"
+       end
+       
+       result_p = OUTPUTS + '/' + File.basename(source)
+       assert File.exist?(result_p), "#{result_p} should have been created"
+       assert_equal [200, 300 ], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been fit into rect proortionally"
+     end
+  end
+  
+  def test_resize_fit_width
+    with_each_horizontal_path_and_name do | source, name |
+      assert_nothing_raised do
+         path, w, h = @processor.resize_fit_width(source, OUTPUTS + '/' + name, 400)
+         assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result as first ret"
+      end
+      
+      result_p = OUTPUTS + '/' + File.basename(source)
+      assert File.exist?(result_p), "#{result_p} should have been created"
+      assert_equal [400, 267], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been into width"
+    end
+    
+    with_each_vertical_path_and_name do | source, name |
+      assert_nothing_raised do
+         path, w, h = @processor.resize_fit_width(source, OUTPUTS + '/' + name, 400)
+      end
+      
+      result_p = OUTPUTS + '/' + File.basename(source)
+      assert File.exist?(result_p), "#{result_p} should have been created"
+      assert_equal [400, 600 ], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been fit into width"
+    end
+  end
+  
+  def test_resize_fit_height
+    with_each_horizontal_path_and_name do | source, name |
+      assert_nothing_raised do
+         path, w, h = @processor.resize_fit_height(source, OUTPUTS + '/' + name, 323)
+         assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result as first ret"
+      end
+      
+      result_p = OUTPUTS + '/' + File.basename(source)
+      assert File.exist?(result_p), "#{result_p} should have been created"
+      assert_equal [485, 323], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been into width"
+    end
+    
+    with_each_vertical_path_and_name do | source, name |
+      assert_nothing_raised do
+         path, w, h = @processor.resize_fit_width(source, OUTPUTS + '/' + name, 323)
+         assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result as first ret"
+      end
+      
+      result_p = OUTPUTS + '/' + File.basename(source)
+      assert File.exist?(result_p), "#{result_p} should have been created"
+      assert_equal [323, 485], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been fit into width"
+    end
+  end
   
   private
     def get_bounds(of)
@@ -93,7 +173,7 @@ module ProcessorTest
     end
     
     def with_each_vertical_path_and_name
-      @landscapes.each do | file |
+      @portraits.each do | file |
         yield(INPUTS + "/" + file, file)
       end
     end

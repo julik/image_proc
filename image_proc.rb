@@ -35,7 +35,7 @@ class ImageProc
   # Deprecated - pass the fitting as geometry string
   def resize(from, to, geom)
     to_width, to_height = geom.scan(/(\d+)/).flatten
-    resize_fit_both(from, to, to_width, to_height)
+    resize_fit_both(from, to, to_width, to_height).shift
   end
   
   # Resize an image fitting the biggest side of it to the side of a square. A must for thumbs.
@@ -56,17 +56,18 @@ class ImageProc
     @target_w, @target_h = fit_sizes(get_bounds(from_path), :width => to_width, :height => to_height)
     resetting_state_afterwards { process_exact }
   end
+  alias_method :resize_fit, :resize_fit_both
 
   # Resize an image fitting the biggest side of it to the side of a square. A must for thumbs.  
   def resize_fit_width(from_path, to_path, width)
-    validate_input_output_files(from_path, to_path, width)
+    validate_input_output_files(from_path, to_path)
     
     @target_w, @target_h = fit_sizes get_bounds(from_path), :width => width
     resetting_state_afterwards { process_exact }
   end
   
   def resize_fit_height(from_path, to_path, height)
-    validate_input_output_files(from_path, to_path, height)
+    validate_input_output_files(from_path, to_path)
     @target_w, @target_h = fit_sizes get_bounds(from_path), :height => height
     resetting_state_afterwards { process_exact }
   end
@@ -75,7 +76,8 @@ class ImageProc
     # cleanup any stale ivars
     def resetting_state_afterwards
       begin
-        kept = yield
+        @dest = @dest % [@target_w, @target_h] if File.basename(@dest).include?('%')
+        kept = [@dest, @target_w, @target_h]; yield
       ensure
         @source, @dest, @source_w, @dest_w, @source_h, @dest_h = nil
       end
@@ -90,7 +92,6 @@ class ImageProc
       raise Error, "This will overwrite #{@dest}" if File.exist?(@dest)
       # This will raise if anything happens
       @source_w, @source_h = get_bounds(from_path)
-
     end
     
     def integerize_values_of(h)
@@ -162,7 +163,7 @@ class ImageProcSips < ImageProc
   
   def process_exact
     fmt = detect_source_format
-    raise_on_err("sips -s format #{fmt} --resampleHeightWidth #{@target_h} #{@target_w} #{@source} --out #{@dest}")
+    raise_on_err("sips -s format #{fmt} --resampleHeightWidth #{@target_h} #{@target_w} #{@source} --out '#{@dest}'")
   end
   
   def get_bounds(of)
