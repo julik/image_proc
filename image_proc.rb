@@ -28,7 +28,7 @@ class ImageProc
     end
     
     def method_missing(*args) #:nodoc:
-      engine.send(*args)
+      engine.new.send(*args)
     end
   end
   
@@ -37,6 +37,7 @@ class ImageProc
     to_width, to_height = geom.scan(/(\d+)/).flatten
     resize_fit_both(from, to, to_width, to_height).shift
   end
+  alias_method :process, :resize
   
   # Resize an image fitting the biggest side of it to the side of a square. A must for thumbs.
   def resize_fit_square(from_path, to_path, square_side)
