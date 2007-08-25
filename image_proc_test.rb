@@ -50,7 +50,8 @@ module ProcessorTest
     sources = names.map{|file| INPUTS + "/" + file }
 
     sources.each_with_index do | source, index |
-      @processor.resize(source, OUTPUTS + '/' + names[index], "65x65")
+      @processor.resize_exact(source, OUTPUTS + '/' + names[index], 65, 65)
+      
       result_p = OUTPUTS + '/' + File.basename(source)
       assert File.exist?(result_p), "#{result_p} should have been created"
       assert_equal [65, 65], get_bounds(result_p), "The image should have been resized exactly"

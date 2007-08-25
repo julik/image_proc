@@ -32,52 +32,56 @@ class ImageProc
     end
   end
   
+  # Deprecated - pass the fitting as geometry string
+  def resize(from, to, geom)
+    to_width, to_height = geom.scan(/(\d+)/).flatten
+    resize_fit_both(from, to, to_width, to_height)
+  end
+  
   # Resize an image fitting the biggest side of it to the side of a square. A must for thumbs.
   def resize_fit_square(from_path, to_path, square_side)
     resize_fit_both(from_path, to_path, square_side, square_side)
   end
 
   # Resize an image fitting the boundary exactly. Will stretch and squash.
-  def resize_exact(from_path, to_path, geom_str)
-    validate_input(from_path, to_path, geom_str)
-    @x, @y = geom_str.scan(/(\d+)/).flatten
-    @y ||= @x
-
+  def resize_exact(from_path, to_path, to_width, to_height)
+    validate_input_output_files(from_path, to_path)
+    @target_w, @target_h = to_width, to_height
     process_exact
   end
 
   # Resize an image fitting it into a rect.
-  def resize_fit_both(from_path, to_path, w, h)
-    validate_input(from_path, to_path, w)
-    @x, @y = fit_sizes get_bounds(from_path), :width => width, :height => h
+  def resize_fit_both(from_path, to_path, to_width, to_height)
+    validate_input_output_files(from_path, to_path)
+    @target_w, @target_h = fit_sizes get_bounds(from_path), :width => to_width, :height => to_height
     process_exact
   end
 
   # Resize an image fitting the biggest side of it to the side of a square. A must for thumbs.  
   def resize_fit_width(from_path, to_path, width)
-    validate_input(from_path, to_path, width)
+    validate_input_output_files(from_path, to_path, width)
     
-    @x, @y = fit_sizes get_bounds(from_path), :width => width
+    @target_w, @target_h = fit_sizes get_bounds(from_path), :width => width
     process_exact
   end
   
   def resize_fit_height(from_path, to_path, height)
-    validate_input(from_path, to_path, height)
-    @x, @y = fit_sizes get_bounds(from_path), :height => height
+    validate_input_output_files(from_path, to_path, height)
+    @target_w, @target_h = fit_sizes get_bounds(from_path), :height => height
     process_exact
   end
   
-  alias_method :resize, :resize_exact
-  
   private
     
-    def validate_input(from_path, to_path, arg)
+    def validate_input_output_files(from_path, to_path)
       @source, @dest = [from_path, to_path].map{|p| File.expand_path(p) }
-      @source_x, @source_y = get_bounds(from_path)
 
       raise Errno::ENOENT, "No such file or directory #{@source}" unless File.exist?(@source)
       raise Errno::ENOENT, "No such file or directory #{@dest}" unless File.exist?(File.dirname(@dest))
       raise Error, "This will overwrite #{@dest}" if File.exist?(@dest)
+      # This will raise if anything happens
+      @source_w, @source_h = get_bounds(from_path)
+
     end
     
     def integerize_values(h)
@@ -126,7 +130,7 @@ end
 
 class ImageProcConvert < ImageProc
   def process_exact
-    raise_on_err("convert -scale #{@x}x#{@y} #{@source} #{@dest}")
+    raise_on_err("convert -scale #{@target_w}x#{@target_h} #{@source} #{@dest}")
   end
   
   def process_width
@@ -149,24 +153,7 @@ class ImageProcSips < ImageProc
   
   def process_exact
     fmt = detect_source_format
-    raise_on_err("sips -s format #{fmt} --resampleHeightWidth #{@x} #{@y} #{@source} --out #{@dest}")
-  end
-  
-  def process_fit_both(w, h)
-    bounds = get_bounds(@source)
-    
-  end
-  
-  def process_fit_width(width)
-  end
-  
-  def process_fit_height(height)
-  end
-  
-  def process_fit
-    fmt = detect_source_format
-    raise_on_err("sips -s format #{fmt} --resampleHeightWidthMax #{@x} #{@y} #{@source} --out #{@dest}")
-    return true
+    raise_on_err("sips -s format #{fmt} --resampleHeightWidth #{@target_w} #{@target_h} #{@source} --out #{@dest}")
   end
   
   def get_bounds(of)
