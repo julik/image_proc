@@ -66,13 +66,23 @@ class ImageProc
     @target_w, @target_h = fit_sizes get_bounds(from_path), :width => width
     resetting_state_afterwards { process_exact }
   end
-  
+
+  # Same as resize_fit_width  
   def resize_fit_height(from_path, to_path, height)
     validate_input_output_files(from_path, to_path)
     @target_w, @target_h = fit_sizes get_bounds(from_path), :height => height
     resetting_state_afterwards { process_exact }
   end
 
+  # Will resize the image so that it's part always fills the rect of +width+ and +height+
+  # It's recommended to then simply use CSS overflow to crop off the edges which are not necessary.
+  # If you want more involved processing calculate the geometry directly.
+  def resize_fit_fill(from_path, to_path, width, height)
+    validate_input_output_files(from_path, to_path)
+    @target_w, @target_h = fit_sizes_with_crop get_bounds(from_path), :height => height, :width => width
+    resetting_state_afterwards { process_exact }
+  end
+  
   # Will fit the passed array of [input_width, input_heitght] proportionally and return an array of
   # [recommended_width, recommended_height] honoring the following parameters:
   #
@@ -137,13 +147,13 @@ class ImageProc
       mult_opts[1].to_f / fit_inside.sort.pop
     end
     
+    puts "cumputed - #{fit_inside.inspect}"
     fit_inside.map!{|value| (value.to_f * size_multiplier)}
+    puts "recumputed - #{fit_inside.inspect}"
+
     prevent_zeroes_in(fit_inside)
     fit_inside.map!{|e| e / 1000}
     
-    # Nudge output values to pixels so that we fit exactly    
-    fit_inside[0] = opts[:width] if (fit_inside[0] < opts[:width])
-    fit_inside[1] = opts[:height] if (fit_inside[1] < opts[:height])
     fit_inside
   end
   
@@ -187,8 +197,6 @@ class ImageProc
       result
     end
     
-    def nudge_floats_to(floats, ints)
-    end
 end
 
 class ImageProcConvert < ImageProc

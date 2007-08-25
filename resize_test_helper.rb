@@ -196,6 +196,19 @@ module ResizeTestHelper
     end
   end
   
+  def test_resize_fit_fill
+    with_each_horizontal_path_and_name do | source, name |
+      assert_nothing_raised do
+         path, w, h = @processor.resize_fit_fill(source, OUTPUTS + '/' + name, 260, 250)
+         assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result as first ret"
+      end
+      
+      result_p = OUTPUTS + '/' + File.basename(source)
+      assert File.exist?(result_p), "#{result_p} should have been created"
+      assert_equal [374, 250], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been into width"
+    end
+  end
+  
   private
     def get_bounds(of)
       if RUBY_PLATFORM =~ /darwin/i

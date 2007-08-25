@@ -99,9 +99,13 @@ class TestGeometryFittingWithCrop < Test::Unit::TestCase
     assert_equal [280, 210], @x.fit_sizes_with_crop(bounds, :width => 200, :height => 210)
   end
   
-  def test_fit_with_crop_does_not_lie_when_small_floats_might_be_involved 
+  def test_fit_with_crop_does_not_lie_when_small_floats_might_be_involved
    bounds = [20, 1000]
    assert_equal bounds, @x.fit_sizes_with_crop(bounds, :width => 20, :height => 20)
   end
   
+  def test_fit_with_crop_should_not_overnudge
+    bounds = [780, 520]
+    assert_equal [375, 250], @x.fit_sizes_with_crop(bounds, :width => 260, :height => 250)
+  end
 end
