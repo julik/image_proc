@@ -10,11 +10,10 @@ module ProcessorTest
     Dir.glob(File.dirname(__FILE__) + '/output/*.*').map{ |e| FileUtils.rm e }
 
     @extensions = ["jpg", "png", "gif"]
-
-    @horizontals =  @extensions.map { | ext | "horizontal.#{ext}" }
-    @verticals =  @extensions.map { | ext | "vertical.#{ext}" }
-    @horizontal_bounds = 780, 520
-    @vertical_bounds = 466, 699
+    @landscapes =  @extensions.map { | ext | "horizontal.#{ext}" }
+    @portraits =  @extensions.map { | ext | "vertical.#{ext}" }
+    @landscape_bounds = 780, 520
+    @portraits_bounds = 466, 699
   end
   
   def test_get_bounds_raise_when_file_passed_does_not_exist
@@ -30,23 +29,23 @@ module ProcessorTest
   end
   
   def test_properly_detects_bounds
-    @horizontals.map do |file| 
-      assert_equal @horizontal_bounds, @processor.get_bounds(INPUTS + "/" + file)
+    @landscapes.map do |file| 
+      assert_equal @landscape_bounds, @processor.get_bounds(INPUTS + "/" + file)
     end
     
-    @verticals.map do |file| 
-      assert_equal @vertical_bounds, @processor.get_bounds(INPUTS + "/" + file)
+    @portraits.map do |file| 
+      assert_equal @portraits_bounds, @processor.get_bounds(INPUTS + "/" + file)
     end
   end
   
   def test_resize_raises_when_trying_to_overwrite
     assert_raise(ImageProc::Error) do
-      @processor.resize INPUTS + '/' + @horizontals[0], INPUTS + '/' + @horizontals[0], "100x100"
+      @processor.resize INPUTS + '/' + @landscapes[0], INPUTS + '/' + @landscapes[0], "100x100"
     end
   end
   
   def test_exact_resize
-    names = (@horizontals  + @verticals)
+    names = (@landscapes  + @portraits)
     sources = names.map{|file| INPUTS + "/" + file }
 
     sources.each_with_index do | source, index |
@@ -55,6 +54,27 @@ module ProcessorTest
       result_p = OUTPUTS + '/' + File.basename(source)
       assert File.exist?(result_p), "#{result_p} should have been created"
       assert_equal [65, 65], get_bounds(result_p), "The image should have been resized exactly"
+    end
+  end
+  
+  def test_resize_is_alias_for_fit_with_geometry_string
+    names = (@landscapes  + @portraits)
+    sources = names.map{|file| INPUTS + "/" + file }
+    
+    with_each_horizontal_path_and_name do | source, name |
+      assert_nothing_raised { @processor.resize(source, OUTPUTS + '/' + name, "300x300") }
+      
+      result_p = OUTPUTS + '/' + File.basename(source)
+      assert File.exist?(result_p), "#{result_p} should have been created"
+      assert_equal [300, 200], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been fit into rect proortionally"
+    end
+    
+    with_each_vertical_path_and_name do | source, name |
+      assert_nothing_raised { @processor.resize(source, OUTPUTS + '/' + name, "300x300") }
+      
+      result_p = OUTPUTS + '/' + File.basename(source)
+      assert File.exist?(result_p), "#{result_p} should have been created"
+      assert_equal [200, 300 ], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been fit into rect proortionally"
     end
   end
   
@@ -71,6 +91,24 @@ module ProcessorTest
         `identify #{of}`.scan(/(\d+)x(\d+)/)[0]
       end.map{|e| e.to_i}
     end
+    
+    def with_each_vertical_path_and_name
+      @landscapes.each do | file |
+        yield(INPUTS + "/" + file, file)
+      end
+    end
+    
+    def with_each_horizontal_path_and_name
+      @landscapes.each do | file |
+        yield(INPUTS + "/" + file, file)
+      end
+    end
+    
+    def with_each_image_path_and_name
+      with_each_horizontal_path_and_name { | path, name | yield path, name }
+      with_each_vertical_path_and_name { | path, name | yield path, name }
+    end 
+  
 end
 
 class TestGeometry < Test::Unit::TestCase
@@ -98,11 +136,15 @@ class TestGeometry < Test::Unit::TestCase
   end
   
   def test_fit_both
-    bounds = [1024, 500]
+    bounds = 1024, 500
     assert_equal [70, 34], @x.fit_sizes(bounds, :height => 70, :width => 70)
 
-    bounds = [500, 1024]
+    bounds = 500, 1024
     assert_equal [34, 70], @x.fit_sizes(bounds, :height => 70, :width => 70)
+    
+    bounds = 780, 520
+    assert_equal [120, 80], @x.fit_sizes(bounds, :height => 120, :width => 120)
+  
   end
   
   def test_we_grok_strings_too
@@ -116,8 +158,8 @@ class TestImageProcSips < Test::Unit::TestCase
   def setup
     super
     @processor = ImageProcSips.new
-    @horizontals.reject!{|e| e =~ /\.(png|gif)/}
-    @verticals.reject!{|e| e =~ /\.(png|gif)/}
+    @landscapes.reject!{|e| e =~ /\.(png|gif)/}
+    @portraits.reject!{|e| e =~ /\.(png|gif)/}
   end
   
   def test_sips_does_not_grok_pngs

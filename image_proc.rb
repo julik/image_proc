@@ -1,5 +1,5 @@
 # A simplistic interface to shell-based image processing. Pluggable, compact and WIN32-incompatible by
-# design. Bugger off.
+# design. Sort of like the Processors in attachment_fu but less. Less.
 #
 #    width, height = ImageProc.get_bounds("image.png")
 #    thumb_filename = ImageProc.resize("image.png", "thumb.png", "50x50")
@@ -47,14 +47,14 @@ class ImageProc
   def resize_exact(from_path, to_path, to_width, to_height)
     validate_input_output_files(from_path, to_path)
     @target_w, @target_h = to_width, to_height
-    process_exact
+    resetting_state_afterwards { process_exact }
   end
 
   # Resize an image fitting it into a rect.
   def resize_fit_both(from_path, to_path, to_width, to_height)
     validate_input_output_files(from_path, to_path)
-    @target_w, @target_h = fit_sizes get_bounds(from_path), :width => to_width, :height => to_height
-    process_exact
+    @target_w, @target_h = fit_sizes(get_bounds(from_path), :width => to_width, :height => to_height)
+    resetting_state_afterwards { process_exact }
   end
 
   # Resize an image fitting the biggest side of it to the side of a square. A must for thumbs.  
@@ -62,16 +62,25 @@ class ImageProc
     validate_input_output_files(from_path, to_path, width)
     
     @target_w, @target_h = fit_sizes get_bounds(from_path), :width => width
-    process_exact
+    resetting_state_afterwards { process_exact }
   end
   
   def resize_fit_height(from_path, to_path, height)
     validate_input_output_files(from_path, to_path, height)
     @target_w, @target_h = fit_sizes get_bounds(from_path), :height => height
-    process_exact
+    resetting_state_afterwards { process_exact }
   end
   
   private
+    # cleanup any stale ivars
+    def resetting_state_afterwards
+      begin
+        kept = yield
+      ensure
+        @source, @dest, @source_w, @dest_w, @source_h, @dest_h = nil
+      end
+      kept
+    end
     
     def validate_input_output_files(from_path, to_path)
       @source, @dest = [from_path, to_path].map{|p| File.expand_path(p) }
@@ -84,12 +93,12 @@ class ImageProc
 
     end
     
-    def integerize_values(h)
+    def integerize_values_of(h)
       h.each_pair{|k,v| h[k] = v.to_i}
     end
     
     def fit_sizes(bounds, opts)
-      integerize_values(opts)
+      integerize_values_of(opts)
       
       ratio = bounds[0].to_f / bounds[1].to_f
       keys = opts.keys & [:width, :height]
@@ -153,7 +162,7 @@ class ImageProcSips < ImageProc
   
   def process_exact
     fmt = detect_source_format
-    raise_on_err("sips -s format #{fmt} --resampleHeightWidth #{@target_w} #{@target_h} #{@source} --out #{@dest}")
+    raise_on_err("sips -s format #{fmt} --resampleHeightWidth #{@target_h} #{@target_w} #{@source} --out #{@dest}")
   end
   
   def get_bounds(of)
