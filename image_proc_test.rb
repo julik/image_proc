@@ -92,8 +92,6 @@ module ProcessorTest
     end
   end
   
-  
-
   def test_resize_is_alias_for_fit_with_geometry_string
      with_each_horizontal_path_and_name do | source, name |
        assert_nothing_raised { @processor.resize(source, OUTPUTS + '/' + name, "300x300") }
@@ -189,6 +187,16 @@ module ProcessorTest
       with_each_vertical_path_and_name { | path, name | yield path, name }
     end 
   
+end
+
+class TestQuickProcessViaClass < Test::Unit::TestCase
+  def test_works
+    source = File.expand_path File.dirname(__FILE__) + '/horizontal.jpg'
+    dest = '/tmp/resized.jpg'
+    assert_nothing_raised do
+      ImageProc.resize(source, dest, "50x50")
+    end
+  end
 end
 
 class TestGeometry < Test::Unit::TestCase

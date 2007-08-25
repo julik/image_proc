@@ -32,7 +32,7 @@ class ImageProc
     end
   end
   
-  # Deprecated - pass the fitting as geometry string
+  # Deprecated - pass the fitting as geometry string. Will use proportional fitting.
   def resize(from, to, geom)
     to_width, to_height = geom.scan(/(\d+)/).flatten
     resize_fit_both(from, to, to_width, to_height).shift
@@ -126,7 +126,7 @@ class ImageProc
       floats.map{|v| v.round }
     end
     
-    def raise_on_err(cmd)
+    def wrap_stderr(cmd)
       inp, outp, err = Open3.popen3(cmd)
       error = err.read.to_s.strip
 
@@ -140,11 +140,11 @@ end
 
 class ImageProcConvert < ImageProc
   def process_exact
-    raise_on_err("convert -resize #{@target_w}x#{@target_h}! #{@source} #{@dest}")
+    wrap_stderr("convert -resize #{@target_w}x#{@target_h}! #{@source} #{@dest}")
   end
   
   def get_bounds(of)
-    raise_on_err("identify #{of}").scan(/(\d+)x(\d+)/)[0].map{|e| e.to_i }
+    wrap_stderr("identify #{of}").scan(/(\d+)x(\d+)/)[0].map{|e| e.to_i }
   end
 end
 
@@ -154,11 +154,11 @@ class ImageProcSips < ImageProc
   
   def process_exact
     fmt = detect_source_format
-    raise_on_err("sips -s format #{fmt} --resampleHeightWidth #{@target_h} #{@target_w} #{@source} --out '#{@dest}'")
+    wrap_stderr("sips -s format #{fmt} --resampleHeightWidth #{@target_h} #{@target_w} #{@source} --out '#{@dest}'")
   end
   
   def get_bounds(of)
-    raise_on_err("sips #{of} -g pixelWidth -g pixelHeight").scan(/(pixelWidth|pixelHeight): (\d+)/).to_a.map{|e| e[1].to_i}
+    wrap_stderr("sips #{of} -g pixelWidth -g pixelHeight").scan(/(pixelWidth|pixelHeight): (\d+)/).to_a.map{|e| e[1].to_i}
   end
   
   private
