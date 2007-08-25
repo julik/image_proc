@@ -140,16 +140,7 @@ end
 
 class ImageProcConvert < ImageProc
   def process_exact
-    raise_on_err("convert -scale #{@target_w}x#{@target_h} #{@source} #{@dest}")
-  end
-  
-  def process_width
-  end
-  
-  def process_height
-  end
-  
-  def process_fit
+    raise_on_err("convert -resize #{@target_w}x#{@target_h}! #{@source} #{@dest}")
   end
   
   def get_bounds(of)

@@ -257,11 +257,11 @@ class TestImageProcSips < Test::Unit::TestCase
   include ProcessorTest
 end
 
-##class TestImageProcConvert < Test::Unit::TestCase
-##  def setup
-##    super
-##    @processor = ImageProcConvert.new
-##  end
-##  
-##  include ProcessorTest
-##end
+class TestImageProcConvert < Test::Unit::TestCase
+  def setup
+    super
+    @processor = ImageProcConvert.new
+  end
+  
+  include ProcessorTest
+end
