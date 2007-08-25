@@ -40,7 +40,7 @@ module ProcessorTest
   
   def test_resize_raises_when_trying_to_overwrite
     assert_raise(ImageProc::Error) do
-      @processor.resize INPUTS + '/' + @landscapes[0], INPUTS + '/' + @landscapes[0], "100x100"
+      @processor.resize INPUTS + '/' + @landscapes[0], INPUTS + '/' + @portraits[2], "100x100"
     end
   end
   
