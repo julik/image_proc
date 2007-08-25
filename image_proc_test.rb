@@ -4,14 +4,12 @@ require 'resize_test_helper'
 require 'image_proc'
 
 class TestQuickProcessViaClass < Test::Unit::TestCase
-  def setup
-    Dir.glob(File.dirname(__FILE__) + '/output/*.*').map{ |e| FileUtils.rm e }
-  end
   
   def test_works
     source = File.dirname(__FILE__) + '/input/horizontal.jpg'
     dest = File.dirname(__FILE__) + '/output/resized.jpg'
     assert_nothing_raised { ImageProc.resize(source, dest, "50x50") }
+    FileUtils.rm dest
   end
 end
 
