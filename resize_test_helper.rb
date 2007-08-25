@@ -230,9 +230,4 @@ module ResizeTestHelper
       end
     end
     
-    def with_each_image_path_and_name
-      with_each_horizontal_path_and_name { | path, name | yield path, name }
-      with_each_vertical_path_and_name { | path, name | yield path, name }
-    end 
-  
 end
