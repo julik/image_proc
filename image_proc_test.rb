@@ -81,6 +81,19 @@ module ProcessorTest
     end
   end
   
+  def test_fit_square_is_alias_for_proportional_resize
+    with_each_horizontal_path_and_name do | source, name |
+      assert_nothing_raised do
+        path, w, h  = @processor.resize_fit_square(source, OUTPUTS + '/' + name, 300)
+        assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result as first ret"
+      end
+      
+      result_p = OUTPUTS + '/' + File.basename(source)
+      assert File.exist?(result_p), "#{result_p} should have been created"
+      assert_equal [300, 200], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been fit into rect proortionally"
+    end
+  end
+  
   def test_resize_fitting_proportionally_into_portrait
     with_each_horizontal_path_and_name do | source, name |
       assert_nothing_raised do
