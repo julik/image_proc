@@ -144,12 +144,10 @@ class ImageProc
     elsif mult_opts[1] > fit_inside[1]
       mult_opts[1].to_f / fit_inside[1]
     else # square
-      mult_opts[1].to_f / fit_inside.sort.pop
+      mult_opts[0].to_f / fit_inside.sort.pop
     end
     
-    puts "cumputed - #{fit_inside.inspect}"
     fit_inside.map!{|value| (value.to_f * size_multiplier)}
-    puts "recumputed - #{fit_inside.inspect}"
 
     prevent_zeroes_in(fit_inside)
     fit_inside.map!{|e| e / 1000}
