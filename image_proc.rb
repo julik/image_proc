@@ -72,8 +72,82 @@ class ImageProc
     @target_w, @target_h = fit_sizes get_bounds(from_path), :height => height
     resetting_state_afterwards { process_exact }
   end
+
+  # Will fit the passed array of [input_width, input_heitght] proportionally and return an array of
+  # [recommended_width, recommended_height] honoring the following parameters:
+  #
+  # :width - maximum width of the bounding rect
+  # :height - maximum height of the bounding rect
+  #
+  # If you pass both the bounds will be fit into the rect having the :width and :height proportionally, downsizing the
+  # bounds if necessary. Useful for calculating needed size before resizing.
+  def fit_sizes(bounds, opts)
+    integerize_values_of(opts)
+    
+    ratio = bounds[0].to_f / bounds[1].to_f
+    keys = opts.keys & [:width, :height]
+    floats = case keys
+      when [:width]
+        desired_w = opts[:width]
+        [desired_w, desired_w / ratio]
+      when [:height]
+        desired_h = opts[:height]
+        [desired_h * ratio, desired_h]
+      else # both, use reduction
+        smallest_side = [opts[:width], opts[:height]].sort.shift
+        if bounds[0] > bounds[1] # horizontal
+          fit_sizes bounds, :width => smallest_side
+        else
+          fit_sizes bounds, :height => smallest_side
+        end
+    end
+    # Prevent zero results 
+    prevent_zeroes_in(floats)
+    
+    # Nudge output values to pixels so that we fit exactly    
+    floats[0] = opts[:width] if (opts[:width] && floats[0] > opts[:width])
+    floats[1] = opts[:height] if (opts[:height] && floats[1] > opts[:height])
+
+    floats
+  end
+
+
+  # Will fit the passed array of [input_width, input_heitght] to fill the whole rect and return an array of
+  # [recommended_width, recommended_height] honoring the following parameters:
+  #
+  # :width - maximum width of the bounding rect
+  # :height - maximum height of the bounding rect
+  #
+  # In contrast to fit_sizes it requires BOTH.
+  #
+  # It's recommended to clip the image which will be created with these bounds using CSS, as not all resizers support
+  # cropping - and besides it's just too many vars.
+  def fit_sizes_with_crop(bounds, opts)
+    raise Error, "fit_sizes_with_crop requires both width and height" unless (opts.keys & [:width, :height]).length == 2
+    fit_inside = fit_sizes(bounds, opts)
+    
+    if opts[:width] > fit_inside[0]
+      size_multiplier = opts[:width].to_f / fit_inside[0]
+    elsif opts[:height] > fit_inside[1]
+      size_multiplier = opts[:height].to_f / fit_inside[1]
+    else # square
+      size_multiplier = (opts[:height].to_f / fit_inside.sort.pop)
+    end
+    fit_inside.map!{|value| (value.to_f * size_multiplier)}
+    prevent_zeroes_in(fit_inside)
+
+    # Nudge output values to pixels so that we fit exactly    
+    fit_inside[0] = opts[:width] if (fit_inside[0] < opts[:width])
+    fit_inside[1] = opts[:height] if (fit_inside[1] < opts[:height])
+    
+    fit_inside
+  end
   
   private
+    def prevent_zeroes_in(floats)
+      floats.map!{|f| r = f.round.to_i; (r.zero? ? 1 : r) }
+    end
+    
     # cleanup any stale ivars
     def resetting_state_afterwards
       begin
@@ -96,35 +170,7 @@ class ImageProc
     end
     
     def integerize_values_of(h)
-      h.each_pair{|k,v| h[k] = v.to_i}
-    end
-    
-    def fit_sizes(bounds, opts)
-      integerize_values_of(opts)
-      
-      ratio = bounds[0].to_f / bounds[1].to_f
-      keys = opts.keys & [:width, :height]
-      floats = case keys
-        when [:width]
-          desired_w = opts[:width]
-          [desired_w, desired_w / ratio]
-        when [:height]
-          desired_h = opts[:height]
-          [desired_h * ratio, desired_h]
-        else # both, use reduction
-          smallest_side = [opts[:width], opts[:height]].sort.shift
-          if bounds[0] > bounds[1] # horizontal
-            fit_sizes bounds, :width => smallest_side
-          else
-            fit_sizes bounds, :height => smallest_side
-          end
-      end
-      
-      # Nudge output values to pixels
-      floats[0] = (floats[0].round > opts[:width] ? floats[0].ceil : floats[0].round) if opts[:width]
-      floats[1] = (floats[1].round > opts[:height] ? floats[1].ceil : floats[1].round) if opts[:height]
-      
-      floats.map{|v| v.round }
+      h.each_pair{|k,v| v.nil? ? h.delete(k) : (h[k] = v.to_i)}
     end
     
     def wrap_stderr(cmd)
@@ -137,6 +183,8 @@ class ImageProc
       result
     end
     
+    def nudge_floats_to(floats, ints)
+    end
 end
 
 class ImageProcConvert < ImageProc
@@ -173,5 +221,3 @@ class ImageProcSips < ImageProc
       return suspected
     end
 end
-
-require 'image_proc_test' if $0 == __FILE__
