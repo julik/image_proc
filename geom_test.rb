@@ -78,7 +78,7 @@ class TestGeometryFittingWithCrop < Test::Unit::TestCase
 
   def test_fit_landscape_into_square_will_slice_off_left_and_right
     bounds = [768, 575]
-    assert_equal [26, 20], @x.fit_sizes_with_crop(bounds, :width => 20, :height => 20)
+    assert_equal [27, 20], @x.fit_sizes_with_crop(bounds, :width => 20, :height => 20)
 
     bounds = [200, 40]
     assert_equal [100, 20], @x.fit_sizes_with_crop(bounds, :width => 20, :height => 20)
@@ -91,7 +91,7 @@ class TestGeometryFittingWithCrop < Test::Unit::TestCase
 
   def test_fit_portrait_into_portrait_will_resize
     bounds = [576, 768]
-    assert_equal [200, 266], @x.fit_sizes_with_crop(bounds, :width => 200, :height => 210)
+    assert_equal [200, 267], @x.fit_sizes_with_crop(bounds, :width => 200, :height => 210)
   end
 
   def test_fit_landscape_into_portrait_will_resize

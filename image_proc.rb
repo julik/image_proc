@@ -93,7 +93,7 @@ class ImageProc
   # bounds if necessary. Useful for calculating needed size before resizing.
   def fit_sizes(bounds, opts)
     integerize_values_of(opts)
-    
+
     ratio = bounds[0].to_f / bounds[1].to_f
     keys = opts.keys & [:width, :height]
     floats = case keys
@@ -113,14 +113,12 @@ class ImageProc
     end
     # Prevent zero results 
     prevent_zeroes_in(floats)
-    
+
     # Nudge output values to pixels so that we fit exactly    
     floats[0] = opts[:width] if (opts[:width] && floats[0] > opts[:width])
     floats[1] = opts[:height] if (opts[:height] && floats[1] > opts[:height])
-
     floats
   end
-
 
   # Will fit the passed array of [input_width, input_heitght] to fill the whole rect and return an array of
   # [recommended_width, recommended_height] honoring the following parameters:
@@ -134,25 +132,9 @@ class ImageProc
   # cropping - and besides it's just too many vars.
   def fit_sizes_with_crop(bounds, opts)
     raise Error, "fit_sizes_with_crop requires both width and height" unless (opts.keys & [:width, :height]).length == 2
-    
-    # We use premultiplication to exclude the possibility of floats which are too small. Nasty but works
-    mult_bounds, mult_opts = bounds.map{|v| v * 1000}, [opts[:width], opts[:height]].map{|v| v * 1000}
-    fit_inside = fit_sizes(mult_bounds, :width => mult_opts[0], :height => mult_opts[1])
-    
-    size_multiplier = if mult_opts[0] > fit_inside[0]
-      mult_opts[0].to_f / fit_inside[0]
-    elsif mult_opts[1] > fit_inside[1]
-      mult_opts[1].to_f / fit_inside[1]
-    else # square
-      mult_opts[0].to_f / fit_inside.sort.pop
-    end
-    
-    fit_inside.map!{|value| (value.to_f * size_multiplier)}
-
-    prevent_zeroes_in(fit_inside)
-    fit_inside.map!{|e| e / 1000}
-    
-    fit_inside
+    scale = [opts[:width].to_f / bounds[0], opts[:height].to_f / bounds[1]].sort.pop
+    result = [bounds[0] * scale, bounds[1] * scale]
+    result.map{|e| e.round}
   end
   
   private
@@ -194,7 +176,7 @@ class ImageProc
       [inp, outp, err].map{|socket| begin; socket.close; rescue IOError; end }
       result
     end
-    
+  
 end
 
 class ImageProcConvert < ImageProc

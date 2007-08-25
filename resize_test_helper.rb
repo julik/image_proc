@@ -205,7 +205,7 @@ module ResizeTestHelper
       
       result_p = OUTPUTS + '/' + File.basename(source)
       assert File.exist?(result_p), "#{result_p} should have been created"
-      assert_equal [374, 250], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been into width"
+      assert_equal [375, 250], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been into width"
     end
   end
   
