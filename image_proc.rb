@@ -11,7 +11,7 @@ require 'open3'
 class ImageProc
   class Error < RuntimeError; end;
   class FormatUnsupported < Error; end;
-
+  HARMLESS = []
   class << self
 
     def engine; @@engine ||= detect_engine; end
@@ -145,7 +145,7 @@ class ImageProc
       floats.map!{|f| r = f.round.to_i; (r.zero? ? 1 : r) }
     end
     
-    # cleanup any stale ivars
+    # cleanup any stale ivars and return the path to result and the resulting bounds
     def resetting_state_afterwards
       begin
         @dest = @dest % [@target_w, @target_h] if File.basename(@dest).include?('%')
@@ -173,9 +173,10 @@ class ImageProc
     def wrap_stderr(cmd)
       inp, outp, err = Open3.popen3(cmd)
       error = err.read.to_s.strip
-
-      raise Error, "Problem with #{@source}: #{error}" unless error.nil? || error.empty?
       result = outp.read.strip
+      unless HARMLESS.any?{|warning| error.to_s.include?(warning)}
+        raise Error, "Problem with #{@source}: #{error}" unless error.nil? || error.empty?
+      end
       [inp, outp, err].map{|socket| begin; socket.close; rescue IOError; end }
       result
     end
@@ -195,7 +196,7 @@ end
 class ImageProcSips < ImageProc
   # -Z pixelsWH --resampleHeightWidthMax pixelsWH
   FORMAT_MAP = { ".tif" => "tiff", ".png" => "png", ".tif" => "tiff", ".gif" => "gif" }
-  
+  HARMLESS = ["XRefStm encountered but"]
   def process_exact
     fmt = detect_source_format
     wrap_stderr("sips -s format #{fmt} --resampleHeightWidth #{@target_h} #{@target_w} #{@source} --out '#{@dest}'")
