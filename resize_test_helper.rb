@@ -35,9 +35,27 @@ module ResizeTestHelper
   end
   
   def test_resize_raises_when_trying_to_overwrite
-    assert_raise(ImageProc::Error) do
+    assert_raise(ImageProc::NoOverwrites) do
       @processor.resize INPUTS + '/' + @landscapes[0], INPUTS + '/' + @portraits[0], "100x100"
     end
+  end
+  
+  def test_resize_raises_when_source_missing
+    missing_input = "/tmp/___imageproc_missing.jpg"
+    assert !File.exist?(missing_input)
+    assert_raise(ImageProc::MissingInput) do
+      @processor.resize missing_input, OUTPUTS + '/zeoutput.jpg', "100x100"
+    end
+  end
+  
+  def test_resize_raises_wheh_destination_dir_missing
+    missing_output = "/tmp/___imageproc_missing/__missing.jpg"
+    from = (INPUTS + '/' + @landscapes[0])
+    
+    assert !File.exist?(File.dirname(missing_output))
+    assert_raise(ImageProc::NoDestinationDir) do
+      @processor.resize from, missing_output, "100x100"
+    end    
   end
   
   def test_resize_exact

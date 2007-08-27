@@ -9,7 +9,10 @@
 require 'open3'
 
 class ImageProc
-  class Error < RuntimeError; end;
+  class Error < RuntimeError; end
+  class MissingInput < Error; end
+  class NoDestinationDir < Error; end
+  class NoOverwrites < Error; end
   class FormatUnsupported < Error; end;
   HARMLESS = []
   class << self
@@ -159,9 +162,9 @@ class ImageProc
     def validate_input_output_files(from_path, to_path)
       @source, @dest = [from_path, to_path].map{|p| File.expand_path(p) }
 
-      raise Errno::ENOENT, "No such file or directory #{@source}" unless File.exist?(@source)
-      raise Errno::ENOENT, "No such file or directory #{@dest}" unless File.exist?(File.dirname(@dest))
-      raise Error, "This will overwrite #{@dest}" if File.exist?(@dest)
+      raise MissingInput, "No such file or directory #{@source}" unless File.exist?(@source)
+      raise NoDestinationDir, "No such file or directory #{@dest}" unless File.exist?(File.dirname(@dest))
+      raise NoOverwrites, "This will overwrite #{@dest}" if File.exist?(@dest)
       # This will raise if anything happens
       @source_w, @source_h = get_bounds(from_path)
     end
