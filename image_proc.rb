@@ -45,6 +45,21 @@ class ImageProc
   end
   alias_method :process, :resize
   
+  # Resizes with specific options passed as a hash
+  #   ImageProc.resize_with_options "/tmp/foo.jpg", "bla.jpg", :width => 120, :height => 30
+  def resize_with_options(from_path, to_path, opts = {})
+    raise Error, "Pass width, height or both" unless (opts.keys & [:width, :height]).any?
+    if opts[:width] && opts[:height] && opts[:fill]
+      resize_fit_fill(from_path, to_path, opts[:width], opts[:height])
+    elsif opts[:width] && opts[:height]
+      resize_fit(from_path, to_path, opts[:width], opts[:height])
+    elsif opts[:width]
+      resize_fit_width(from_path, to_path, opts[:width])
+    else
+      resize_fit_height(from_path, to_path, opts[:width])
+    end
+  end
+  
   # Resize an image fitting the biggest side of it to the side of a square. A must for thumbs.
   def resize_fit_square(from_path, to_path, square_side)
     resize_fit_both(from_path, to_path, square_side, square_side)
