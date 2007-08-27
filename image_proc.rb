@@ -16,7 +16,7 @@ class ImageProc
   class FormatUnsupported < Error; end;
   HARMLESS = []
   class << self
-
+    def engine=(kls); @@engine = kls; end
     def engine; @@engine ||= detect_engine; end
 
     def detect_engine
@@ -192,7 +192,7 @@ class ImageProc
       inp, outp, err = Open3.popen3(cmd)
       error = err.read.to_s.strip
       result = outp.read.strip
-      unless HARMLESS.any?{|warning| error.to_s.include?(warning)}
+      unless self.class::HARMLESS.select{|warning| error =~ warning }.any?
         raise Error, "Problem with #{@source}: #{error}" unless error.nil? || error.empty?
       end
       [inp, outp, err].map{|socket| begin; socket.close; rescue IOError; end }
@@ -202,6 +202,7 @@ class ImageProc
 end
 
 class ImageProcConvert < ImageProc
+  HARMLESS = [/unknown field with tag/]
   def process_exact
     wrap_stderr("convert -resize #{@target_w}x#{@target_h}! #{@source} #{@dest}")
   end
@@ -214,7 +215,7 @@ end
 class ImageProcSips < ImageProc
   # -Z pixelsWH --resampleHeightWidthMax pixelsWH
   FORMAT_MAP = { ".tif" => "tiff", ".png" => "png", ".tif" => "tiff", ".gif" => "gif" }
-  HARMLESS = ["XRefStm encountered but"]
+  HARMLESS = [/XRefStm encountered but/]
   def process_exact
     fmt = detect_source_format
     wrap_stderr("sips -s format #{fmt} --resampleHeightWidth #{@target_h} #{@target_w} #{@source} --out '#{@dest}'")
