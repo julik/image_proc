@@ -17,7 +17,7 @@ class ImageProc
   HARMLESS = []
   class << self
     def engine=(kls); @@engine = kls; end
-    def engine; @@engine ||= detect_engine; end
+    def engine; @@engine ||= detect_engine; @@engine; end
 
     def detect_engine
       if RUBY_PLATFORM =~ /darwin/i
@@ -178,7 +178,7 @@ class ImageProc
       @source, @dest = [from_path, to_path].map{|p| File.expand_path(p) }
 
       raise MissingInput, "No such file or directory #{@source}" unless File.exist?(@source)
-      raise NoDestinationDir, "No such file or directory #{@dest}" unless File.exist?(File.dirname(@dest))
+      raise NoDestinationDir, "No destination directory #{File.dirname(@dest)}" unless File.exist?(File.dirname(@dest))
       raise NoOverwrites, "This will overwrite #{@dest}" if File.exist?(@dest)
       # This will raise if anything happens
       @source_w, @source_h = get_bounds(from_path)
@@ -210,6 +210,30 @@ class ImageProcConvert < ImageProc
   def get_bounds(of)
     wrap_stderr("identify #{of}").scan(/(\d+)x(\d+)/)[0].map{|e| e.to_i }
   end
+end
+
+class ImageProcRmagick < ImageProc
+  require 'RMagick'
+  
+  def get_bounds(of)
+    comp = wrap_err { Magick::Image.ping(of)[0] }
+    res = comp.columns, comp.rows
+    comp = nil; return res
+  end
+  
+  def process_exact
+    img = wrap_err { Magick::Image.read(@source).first }
+    img.scale(@target_w, @target_h).write(@dest)
+    img = nil # deallocate the ref
+  end
+  private
+    def wrap_err
+      begin
+        yield
+      rescue Magick::ImageMagickError => e
+        raise Error, e.to_s
+      end
+    end
 end
 
 class ImageProcSips < ImageProc

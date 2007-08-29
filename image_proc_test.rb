@@ -13,6 +13,15 @@ class TestQuickProcessViaClass < Test::Unit::TestCase
   end
 end
 
+class TestEngineAssignmentSticks < Test::Unit::TestCase
+  def test_foreign_engine_assignment_sticks
+    dummy = "foobar"
+    ImageProc.engine = dummy
+    assert_equal dummy, ImageProc.engine
+    ImageProc.engine = nil
+  end
+end
+
 class TestImageProcSips < Test::Unit::TestCase
   def setup
     super
@@ -40,6 +49,15 @@ class TestImageProcConvert < Test::Unit::TestCase
   def setup
     super
     @processor = ImageProcConvert.new
+  end
+  
+  include ResizeTestHelper
+end
+
+class TestImageProcRmagick < Test::Unit::TestCase
+  def setup
+    super
+    @processor = ImageProcRmagick.new
   end
   
   include ResizeTestHelper
