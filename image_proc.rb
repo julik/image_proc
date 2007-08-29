@@ -12,6 +12,7 @@ class ImageProc
   class Error < RuntimeError; end
   class MissingInput < Error; end
   class NoDestinationDir < Error; end
+  class DestinationLocked < Error; end
   class NoOverwrites < Error; end
   class FormatUnsupported < Error; end;
   HARMLESS = []
@@ -176,9 +177,10 @@ class ImageProc
     
     def validate_input_output_files(from_path, to_path)
       @source, @dest = [from_path, to_path].map{|p| File.expand_path(p) }
-
+      destdir = File.dirname(@dest)
       raise MissingInput, "No such file or directory #{@source}" unless File.exist?(@source)
-      raise NoDestinationDir, "No destination directory #{File.dirname(@dest)}" unless File.exist?(File.dirname(@dest))
+      raise NoDestinationDir, "No destination directory #{destdir}" unless File.exist?(destdir)
+      raise DestinationLocked, "Cannot write to #{destdir}" unless File.writable?(destdir)
       raise NoOverwrites, "This will overwrite #{@dest}" if File.exist?(@dest)
       # This will raise if anything happens
       @source_w, @source_h = get_bounds(from_path)
