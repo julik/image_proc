@@ -215,20 +215,24 @@ class ImageProcConvert < ImageProc
 end
 
 class ImageProcRmagick < ImageProc
-  require 'RMagick'
-  
   def get_bounds(of)
+    run_require
     comp = wrap_err { Magick::Image.ping(of)[0] }
     res = comp.columns, comp.rows
     comp = nil; return res
   end
-  
+
   def process_exact
+    run_require
     img = wrap_err { Magick::Image.read(@source).first }
     img.scale(@target_w, @target_h).write(@dest)
     img = nil # deallocate the ref
   end
   private
+    def run_require
+      require 'RMagick' unless defined?(Magick)
+    end
+    
     def wrap_err
       begin
         yield
