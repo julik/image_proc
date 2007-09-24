@@ -22,43 +22,51 @@ class TestEngineAssignmentSticks < Test::Unit::TestCase
   end
 end
 
-class TestImageProcSips < Test::Unit::TestCase
-  def setup
-    super
-    @processor = ImageProcSips.new
-    @landscapes.reject!{|e| e =~ /\.(png|gif)/}
-    @portraits.reject!{|e| e =~ /\.(png|gif)/}
-  end
-  
-  def test_sips_does_not_grok_pngs
-    assert_raise(ImageProc::FormatUnsupported) do
-      @processor.resize(INPUTS + '/horizontal.gif', OUTPUTS + '/horizontal.gif', "100x100")
+if RUBY_PLATFORM =~ /darwin/i
+  class TestImageProcSips < Test::Unit::TestCase
+    def setup
+      super
+      @processor = ImageProcSips.new
+      @landscapes.reject!{|e| e =~ /\.(png|gif)/}
+      @portraits.reject!{|e| e =~ /\.(png|gif)/}
     end
-  end
   
-  def test_sips_does_not_grok_gifs
-    assert_raise(ImageProc::FormatUnsupported) do
-      @processor.resize(INPUTS + '/horizontal.png', OUTPUTS + '/horizontal.png', "100x100")
+    def test_sips_does_not_grok_pngs
+      assert_raise(ImageProc::FormatUnsupported) do
+        @processor.resize(INPUTS + '/horizontal.gif', OUTPUTS + '/horizontal.gif', "100x100")
+      end
     end
-  end
   
-  include ResizeTestHelper
+    def test_sips_does_not_grok_gifs
+      assert_raise(ImageProc::FormatUnsupported) do
+        @processor.resize(INPUTS + '/horizontal.png', OUTPUTS + '/horizontal.png', "100x100")
+      end
+    end
+  
+    include ResizeTestHelper
+  end
 end
 
-class TestImageProcConvert < Test::Unit::TestCase
-  def setup
-    super
-    @processor = ImageProcConvert.new
-  end
+if(`which convert`)
+  class TestImageProcConvert < Test::Unit::TestCase
+    def setup
+      super
+      @processor = ImageProcConvert.new
+    end
   
-  include ResizeTestHelper
+    include ResizeTestHelper
+  end
 end
 
-class TestImageProcRmagick < Test::Unit::TestCase
-  def setup
-    super
-    @processor = ImageProcRmagick.new
-  end
+begin
+  require 'RMagick'
+  class TestImageProcRmagick < Test::Unit::TestCase
+    def setup
+      super
+      @processor = ImageProcRmagick.new
+    end
   
-  include ResizeTestHelper
+    include ResizeTestHelper
+  end
+rescue LoadError
 end
