@@ -3,13 +3,43 @@ require 'fileutils'
 require 'resize_test_helper'
 require 'image_proc'
 
-class TestQuickProcessViaClass < Test::Unit::TestCase
-  
-  def test_works
+#class TestQuickProcessViaClassWithGeomString < Test::Unit::TestCase
+#  def test_works
+#    source = File.dirname(__FILE__) + '/input/horizontal.jpg'
+#    dest = File.dirname(__FILE__) + '/output/resized.jpg'
+#    assert_nothing_raised { ImageProc.resize(source, dest, "50x50") }
+#    FileUtils.rm dest
+#  end
+#end
+
+class TestQuickProcessWithOptions < Test::Unit::TestCase
+  def test_resize_with_options
     source = File.dirname(__FILE__) + '/input/horizontal.jpg'
     dest = File.dirname(__FILE__) + '/output/resized.jpg'
-    assert_nothing_raised { ImageProc.resize(source, dest, "50x50") }
-    FileUtils.rm dest
+    opts = {:height=>75, :fill=>true}
+    begin
+      assert_nothing_raised do
+        path, w, h = ImageProc.resize_with_options(source, dest, opts)
+      end
+    ensure
+      File.unlink(dest) rescue nil
+    end
+  end
+  
+  def test_raises_on_invalid_options
+    assert_raise(ImageProc::InvalidOptions) do
+      source = File.dirname(__FILE__) + '/input/horizontal.jpg'
+      dest = File.dirname(__FILE__) + '/output/resized.jpg'
+      opts = {:too => 4, :doo => 10}
+      ImageProc.resize_with_options(source, dest, opts)
+    end
+
+    assert_raise(ImageProc::InvalidOptions) do
+      source = File.dirname(__FILE__) + '/input/horizontal.jpg'
+      dest = File.dirname(__FILE__) + '/output/resized.jpg'
+      opts = {}
+      ImageProc.resize_with_options(source, dest, opts)
+    end
   end
 end
 

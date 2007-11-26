@@ -14,7 +14,9 @@ class ImageProc
   class NoDestinationDir < Error; end
   class DestinationLocked < Error; end
   class NoOverwrites < Error; end
-  class FormatUnsupported < Error; end;
+  class FormatUnsupported < Error; end
+  class InvalidOptions < Error; end
+  
   HARMLESS = []
   class << self
     def engine=(kls); @@engine = kls; end
@@ -49,15 +51,22 @@ class ImageProc
   # Resizes with specific options passed as a hash
   #   ImageProc.resize_with_options "/tmp/foo.jpg", "bla.jpg", :width => 120, :height => 30
   def resize_with_options(from_path, to_path, opts = {})
-    raise Error, "Pass width, height or both" unless (opts.keys & [:width, :height]).any?
+    raise InvalidOptions,
+      "The only allowed options are :width, :height and :fill" if (opts.keys - [:width, :height, :fill]).any?
+    raise InvalidOptions,
+      "Pass width, height or both" unless (opts.keys & [:width, :height]).any?
+    opts.each_pair { |k,v|  raise InvalidOptions, "#{k.inspect} cannot be set to nil" if v.nil? }
+    
     if opts[:width] && opts[:height] && opts[:fill]
       resize_fit_fill(from_path, to_path, opts[:width], opts[:height])
     elsif opts[:width] && opts[:height]
       resize_fit(from_path, to_path, opts[:width], opts[:height])
     elsif opts[:width]
       resize_fit_width(from_path, to_path, opts[:width])
+    elsif opts[:height]
+      resize_fit_height(from_path, to_path, opts[:height])
     else
-      resize_fit_height(from_path, to_path, opts[:width])
+      raise "This should never happen"
     end
   end
   
@@ -92,7 +101,7 @@ class ImageProc
   # Same as resize_fit_width  
   def resize_fit_height(from_path, to_path, height)
     validate_input_output_files(from_path, to_path)
-    @target_w, @target_h = fit_sizes get_bounds(from_path), :height => height
+    @target_w, @target_h = fit_sizes(get_bounds(from_path), :height => height)
     resetting_state_afterwards { process_exact }
   end
 
@@ -114,12 +123,14 @@ class ImageProc
   # If you pass both the bounds will be fit into the rect having the :width and :height proportionally, downsizing the
   # bounds if necessary. Useful for calculating needed size before resizing.
   def fit_sizes(bounds, opts)
-    disallow_null_values_in(opts)
+    
+    disallow_nil_values_in(opts)
     integerize_values_of(opts)
     
     ratio = bounds[0].to_f / bounds[1].to_f
-    keys = opts.keys & [:width, :height]
-    floats = case keys
+    floats = case (opts.keys & [:height, :width])
+      when []
+        raise "The options #{opts.inspect} do not contain proper bounds"
       when [:width]
         desired_w = opts[:width]
         [desired_w, desired_w / ratio]
@@ -134,6 +145,7 @@ class ImageProc
           fit_sizes bounds, :height => smallest_side
         end
     end
+  
     # Prevent zero results 
     prevent_zeroes_in(floats)
 
@@ -165,7 +177,7 @@ class ImageProc
       floats.map!{|f| r = f.round.to_i; (r.zero? ? 1 : r) }
     end
     
-    def disallow_null_values_in(floats)
+    def disallow_nil_values_in(floats)
       floats.each_pair{|k,v| floats.delete(k) if v.nil? }
     end
     
