@@ -114,8 +114,9 @@ class ImageProc
   # If you pass both the bounds will be fit into the rect having the :width and :height proportionally, downsizing the
   # bounds if necessary. Useful for calculating needed size before resizing.
   def fit_sizes(bounds, opts)
+    disallow_null_values_in(opts)
     integerize_values_of(opts)
-
+    
     ratio = bounds[0].to_f / bounds[1].to_f
     keys = opts.keys & [:width, :height]
     floats = case keys
@@ -162,6 +163,10 @@ class ImageProc
   private
     def prevent_zeroes_in(floats)
       floats.map!{|f| r = f.round.to_i; (r.zero? ? 1 : r) }
+    end
+    
+    def disallow_null_values_in(floats)
+      floats.each_pair{|k,v| floats.delete(k) if v.nil? }
     end
     
     # cleanup any stale ivars and return the path to result and the resulting bounds

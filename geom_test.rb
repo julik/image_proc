@@ -14,6 +14,7 @@ class TestGeometryFitting < Test::Unit::TestCase
   def test_fit_width
     bounds = [1024, 500]
     assert_equal [50, 24], @x.fit_sizes(bounds, :width => 50)
+    assert_equal [50, 24], @x.fit_sizes(bounds, :width => 50, :height => nil)
 
     bounds = [500, 1024]
     assert_equal [50, 102], @x.fit_sizes(bounds, :width => 50)
@@ -32,6 +33,7 @@ class TestGeometryFitting < Test::Unit::TestCase
   def test_fit_height
     bounds = [1024, 500]
     assert_equal [102, 50], @x.fit_sizes(bounds, :height => 50)
+    assert_equal [102, 50], @x.fit_sizes(bounds, :height => 50, :width => nil)
 
     bounds = [500, 1024]
     assert_equal [24, 50], @x.fit_sizes(bounds, :height => 50)
@@ -46,7 +48,6 @@ class TestGeometryFitting < Test::Unit::TestCase
     
     bounds = 780, 520
     assert_equal [120, 80], @x.fit_sizes(bounds, :height => 120, :width => 120)
-  
   end
   
   def test_fit_groks_strings_too
