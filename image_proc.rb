@@ -51,8 +51,8 @@ class ImageProc
   # Resizes with specific options passed as a hash
   #   ImageProc.resize_with_options "/tmp/foo.jpg", "bla.jpg", :width => 120, :height => 30
   def resize_with_options(from_path, to_path, opts = {})
-    raise InvalidOptions,
-      "The only allowed options are :width, :height and :fill" if (opts.keys - [:width, :height, :fill]).any?
+    # raise InvalidOptions,
+    #   "The only allowed options are :width, :height and :fill" if (opts.keys - [:width, :height, :fill]).any?
     raise InvalidOptions,
       "Pass width, height or both" unless (opts.keys & [:width, :height]).any?
     opts.each_pair { |k,v|  raise InvalidOptions, "#{k.inspect} cannot be set to nil" if v.nil? }
