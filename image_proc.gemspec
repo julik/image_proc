@@ -1,23 +1,23 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{ImageProc}
+  s.name = %q{image_proc}
   s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Julik"]
   s.date = %q{2009-01-09}
-  s.description = %q{Simple image resizer, pluggable}
+  s.description = %q{A no-frills image metadata and resizing}
   s.email = ["me@julik.nl"]
   s.extra_rdoc_files = ["History.txt", "Manifest.txt", "README.txt"]
   s.files = ["History.txt", "Manifest.txt", "README.txt", "Rakefile", "init.rb", "lib/image_proc.rb", "test/input/horizontal.gif", "test/input/horizontal.jpg", "test/input/horizontal.png", "test/input/vertical.gif", "test/input/vertical.jpg", "test/input/vertical.png", "test/resize_test_helper.rb", "test/test_geom.rb", "test/test_image_proc.rb"]
   s.has_rdoc = true
-  s.homepage = %q{http://github.com/julik/image_proc}
+  s.homepage = %q{http://wiretap.rubyforge.org/image_proc}
   s.rdoc_options = ["--main", "README.txt"]
   s.require_paths = ["lib"]
-  s.rubyforge_project = %q{imageproc}
+  s.rubyforge_project = %q{wiretap}
   s.rubygems_version = %q{1.3.1}
-  s.summary = %q{Simple image resizer, pluggable}
+  s.summary = %q{A no-frills image resizer, with pluggable backends}
   s.test_files = ["test/test_geom.rb", "test/test_image_proc.rb"]
 
   if s.respond_to? :specification_version then
