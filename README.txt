@@ -1,20 +1,20 @@
 = ImageProc
 
-* http://github.com/julik/image_proc
+* http://wiretap.rubyforge.org/image_proc
 
 == DESCRIPTION:
 
-Simple image resizer, pluggable
+A no-frills image resizer, with pluggable backends. No extra software required on OS X
 
 == INSTALL:
 
-* FIX (sudo gem install, anything else)
+* sudo gem install image_proc
 
 == LICENSE:
 
 (The MIT License)
 
-Copyright (c) 2009 FIX
+Copyright (c) 2009 Julik Tarkhanov <me@julik.nl>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
