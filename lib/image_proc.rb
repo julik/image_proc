@@ -264,7 +264,7 @@ end
 class ImageProcSips < ImageProc
   # -Z pixelsWH --resampleHeightWidthMax pixelsWH
   FORMAT_MAP = { ".tif" => "tiff", ".png" => "png", ".tif" => "tiff", ".gif" => "gif" }
-  HARMLESS = [/XRefStm encountered but/]
+  HARMLESS = [/XRefStm encountered but/, /CGColor/]
   def process_exact
     fmt = detect_source_format
     wrap_stderr("sips -s format #{fmt} --resampleHeightWidth #{@target_h} #{@target_w} #{@source} --out '#{@dest}'")
