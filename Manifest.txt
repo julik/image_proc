@@ -2,7 +2,6 @@ History.txt
 Manifest.txt
 README.txt
 Rakefile
-geom_test.rb
 init.rb
 lib/image_proc.rb
 test/input/horizontal.gif
@@ -12,4 +11,5 @@ test/input/vertical.gif
 test/input/vertical.jpg
 test/input/vertical.png
 test/resize_test_helper.rb
+test/test_geom.rb
 test/test_image_proc.rb
