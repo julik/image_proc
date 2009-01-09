@@ -1,1 +1,1 @@
-require File.dirname(__FILE__) + '/image_proc'
+require File.dirname(__FILE__) + '/lib/image_proc'

@@ -9,6 +9,8 @@
 require 'open3'
 
 class ImageProc
+  VERSION = '0.1.0'
+
   class Error < RuntimeError; end
   class MissingInput < Error; end
   class NoDestinationDir < Error; end
