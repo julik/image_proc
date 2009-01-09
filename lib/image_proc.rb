@@ -21,9 +21,13 @@ class ImageProc
   
   HARMLESS = []
   class << self
+    # Assign a specific processor class
     def engine=(kls); @@engine = kls; end
+  
+    # Get the processor class currently assigned
     def engine; @@engine ||= detect_engine; @@engine; end
-
+    
+    # Tries to detect the best engine available
     def detect_engine
       if RUBY_PLATFORM =~ /darwin/i
         ImageProcSips
@@ -33,7 +37,9 @@ class ImageProc
         raise "This system has no image processing facitilites that we can use"
       end
     end
-        
+    
+    # Qukckly get bounds of an image
+    #   ImageProc.get_bounds("/tmp/upload.tif") #=> [100, 120]
     def get_bounds(of)
       engine.new.get_bounds(File.expand_path(of))
     end
