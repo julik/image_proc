@@ -21,6 +21,18 @@ class ImageProc
   
   HARMLESS = []
   class << self
+    
+    # Run a block without warnings
+    def keep_quiet
+      o = $VERBOSE
+      begin
+        $VERBOSE = nil
+        yield
+      ensure
+        $VERBOSE = o
+      end
+    end
+    
     # Assign a specific processor class
     def engine=(kls); @@engine = kls; end
   
@@ -220,7 +232,7 @@ class ImageProc
       error = err.read.to_s.strip
       result = outp.read.strip
       unless self.class::HARMLESS.select{|warning| error =~ warning }.any?
-        raise Error, "Problem with #{@source}: #{error}" unless error.nil? || error.empty?
+        raise Error, "Problem: #{error}" unless error.nil? || error.empty?
       end
       [inp, outp, err].map{|socket| begin; socket.close; rescue IOError; end }
       result
@@ -228,66 +240,72 @@ class ImageProc
   
 end
 
-class ImageProcConvert < ImageProc
-  HARMLESS = [/unknown field with tag/]
-  def process_exact
-    wrap_stderr("convert -resize #{@target_w}x#{@target_h}! #{@source} #{@dest}")
-  end
+ImageProc.keep_quiet do
+  class ImageProcConvert < ImageProc
+    HARMLESS = [/unknown field with tag/]
+    def process_exact
+      wrap_stderr("convert -resize #{@target_w}x#{@target_h}! #{@source} #{@dest}")
+    end
   
-  def get_bounds(of)
-    wrap_stderr("identify #{of}").scan(/(\d+)x(\d+)/)[0].map{|e| e.to_i }
+    def get_bounds(of)
+      wrap_stderr("identify #{of}").scan(/(\d+)x(\d+)/)[0].map{|e| e.to_i }
+    end
   end
 end
 
-class ImageProcRmagick < ImageProc
-  def get_bounds(of)
-    run_require
-    comp = wrap_err { Magick::Image.ping(of)[0] }
-    res = comp.columns, comp.rows
-    comp = nil; return res
-  end
-
-  def process_exact
-    run_require
-    img = wrap_err { Magick::Image.read(@source).first }
-    img.scale(@target_w, @target_h).write(@dest)
-    img = nil # deallocate the ref
-  end
-  private
-    def run_require
-      require 'RMagick' unless defined?(Magick)
+ImageProc.keep_quiet do
+  class ImageProcRmagick < ImageProc
+    def get_bounds(of)
+      run_require
+      comp = wrap_err { Magick::Image.ping(of)[0] }
+      res = comp.columns, comp.rows
+      comp = nil; return res
     end
+
+    def process_exact
+      run_require
+      img = wrap_err { Magick::Image.read(@source).first }
+      img.scale(@target_w, @target_h).write(@dest)
+      img = nil # deallocate the ref
+    end
+    private
+      def run_require
+        require 'RMagick' unless defined?(Magick)
+      end
     
-    def wrap_err
-      begin
-        yield
-      rescue Magick::ImageMagickError => e
-        raise Error, e.to_s
+      def wrap_err
+        begin
+          yield
+        rescue Magick::ImageMagickError => e
+          raise Error, e.to_s
+        end
       end
-    end
+  end
 end
 
-class ImageProcSips < ImageProc
-  # -Z pixelsWH --resampleHeightWidthMax pixelsWH
-  FORMAT_MAP = { ".tif" => "tiff", ".png" => "png", ".tif" => "tiff", ".gif" => "gif" }
-  HARMLESS = [/XRefStm encountered but/, /CGColor/]
-  def process_exact
-    fmt = detect_source_format
-    wrap_stderr("sips -s format #{fmt} --resampleHeightWidth #{@target_h} #{@target_w} #{@source} --out '#{@dest}'")
-  end
-  
-  def get_bounds(of)
-    wrap_stderr("sips #{of} -g pixelWidth -g pixelHeight").scan(/(pixelWidth|pixelHeight): (\d+)/).to_a.map{|e| e[1].to_i}
-  end
-  
-  private
-    def detect_source_format
-      suspected = FORMAT_MAP[File.extname(@source)]
-      suspected =  (suspected.nil? || suspected.empty?) ? 'jpeg' : suspected
-      case suspected
-        when "png", "gif"
-          raise FormatUnsupported, "SIPS cannot resize indexed color GIF or PNG images, call Apple if you want to know why"
-      end
-      return suspected
+ImageProc.keep_quiet do
+  class ImageProcSips < ImageProc
+    # -Z pixelsWH --resampleHeightWidthMax pixelsWH
+    FORMAT_MAP = { ".tif" => "tiff", ".png" => "png", ".tif" => "tiff", ".gif" => "gif" }
+    HARMLESS = [/XRefStm encountered but/, /CGColor/]
+    def process_exact
+      fmt = detect_source_format
+      wrap_stderr("sips -s format #{fmt} --resampleHeightWidth #{@target_h} #{@target_w} #{@source} --out '#{@dest}'")
     end
+  
+    def get_bounds(of)
+      wrap_stderr("sips #{of} -g pixelWidth -g pixelHeight").scan(/(pixelWidth|pixelHeight): (\d+)/).to_a.map{|e| e[1].to_i}
+    end
+  
+    private
+      def detect_source_format
+        suspected = FORMAT_MAP[File.extname(@source)]
+        suspected =  (suspected.nil? || suspected.empty?) ? 'jpeg' : suspected
+        case suspected
+          when "png", "gif"
+            raise FormatUnsupported, "SIPS cannot resize indexed color GIF or PNG images, call Apple if you want to know why"
+        end
+        return suspected
+      end
+  end
 end
