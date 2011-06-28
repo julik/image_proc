@@ -1,3 +1,5 @@
+require 'open3'
+
 # A simplistic interface to shell-based image processing. Pluggable, compact and WIN32-incompatible by
 # design. Sort of like the Processors in attachment_fu but less. Less.
 #
@@ -6,10 +8,8 @@
 #
 # The whole idea is: a backend does not have to support cropping (we don't do it), it has only to be able to resize,
 # and a backend should have 2 public methods. That's the game.
-require 'open3'
-
 class ImageProc
-  VERSION = '0.1.0'
+  VERSION = '0.1.1'
 
   class Error < RuntimeError; end
   class MissingInput < Error; end

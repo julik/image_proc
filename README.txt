@@ -14,7 +14,7 @@ A no-frills image resizer, with pluggable backends. No extra software required o
 
 (The MIT License)
 
-Copyright (c) 2009 Julik Tarkhanov <me@julik.nl>
+Copyright (c) 2009-2011 Julik Tarkhanov <me@julik.nl>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

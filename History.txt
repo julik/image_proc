@@ -1,3 +1,9 @@
+=== 1.0.1 / 2009-01-09
+
+* Small updates to Hoe and other software rot prevention
+
+  * Birthday!
+
 === 1.0.0 / 2009-01-09
 
 * 1 major enhancement
