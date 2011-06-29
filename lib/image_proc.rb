@@ -244,7 +244,7 @@ ImageProc.keep_quiet do
   class ImageProcConvert < ImageProc
     HARMLESS = [/unknown field with tag/]
     def process_exact
-      wrap_stderr("convert -resize #{@target_w}x#{@target_h}! #{@source} #{@dest}")
+      wrap_stderr("convert -filter Gaussian -resize #{@target_w}x#{@target_h}! #{@source} #{@dest}")
     end
   
     def get_bounds(of)
