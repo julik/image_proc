@@ -41,12 +41,12 @@ class ImageProc
     
     # Tries to detect the best engine available
     def detect_engine
-      if RUBY_PLATFORM =~ /darwin/i
-        ImageProcSips
-      elsif (`which convert` =~ /^\// )
+      if (`which convert` =~ /^\// )
         ImageProcConvert
+      elsif RUBY_PLATFORM =~ /darwin/i
+        ImageProcSips
       else
-        raise "This system has no image processing facitilites that we can use"
+        raise "This system has no image processing facitilites that we can use. Time to compile RMagick or install a decent OS."
       end
     end
     
