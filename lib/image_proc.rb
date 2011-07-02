@@ -186,13 +186,19 @@ class ImageProc
   # It's recommended to clip the image which will be created with these bounds using CSS, as not all resizers support
   # cropping - and besides it's just too many vars.
   def fit_sizes_with_crop(bounds, opts)
-    raise Error, "fit_sizes_with_crop requires both width and height" unless (opts.keys & [:width, :height]).length == 2
+    force_keys!(opts, :width, :height)
     scale = [opts[:width].to_f / bounds[0], opts[:height].to_f / bounds[1]].sort.pop
     result = [bounds[0] * scale, bounds[1] * scale]
     result.map{|e| e.round}
   end
   
   private
+    def force_keys!(in_hash, *keynames)
+      unless (in_hash.keys & keynames).length == keynames.length
+        raise Error, "This method requires #{keynames.join(', ')}" 
+      end
+    end
+    
     def prevent_zeroes_in(floats)
       floats.map!{|f| r = f.round.to_i; (r.zero? ? 1 : r) }
     end
