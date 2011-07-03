@@ -4,12 +4,12 @@ require 'open3'
 # design. Sort of like the Processors in attachment_fu but less. Less.
 #
 #    width, height = ImageProc.get_bounds("image.png")
-#    thumb_filename = ImageProc.resize("image.png", "thumb.png", "50x50")
+#    thumb_filename = ImageProc.resize("image.png", "thumb.png", :width => 50. :height => 50)
 #
 # The whole idea is: a backend does not have to support cropping (we don't do it), it has only to be able to resize,
 # and a backend should have 2 public methods. That's the game.
 class ImageProc
-  VERSION = '0.1.1'
+  VERSION = '1.0.0'
 
   class Error < RuntimeError; end
   class MissingInput < Error; end
@@ -61,20 +61,13 @@ class ImageProc
     end
   end
   
-  # Deprecated - pass the fitting as geometry string. Will use proportional fitting.
-  def resize(from, to, geom)
-    to_width, to_height = geom.scan(/(\d+)/).flatten
-    resize_fit_both(from, to, to_width, to_height).shift
-  end
-  alias_method :process, :resize
-  
-  # Resizes with specific options passed as a hash
-  #   ImageProc.resize_with_options "/tmp/foo.jpg", "bla.jpg", :width => 120, :height => 30
-  def resize_with_options(from_path, to_path, opts = {})
+  # Resizes with specific options passed as a hash, and return the destination path to the resized image
+  #   ImageProc.resize "/tmp/foo.jpg", "bla.jpg", :width => 120, :height => 30
+  def resize(from_path, to_path, opts = {})
     # raise InvalidOptions,
     #   "The only allowed options are :width, :height and :fill" if (opts.keys - [:width, :height, :fill]).any?
-    raise InvalidOptions,
-      "Pass width, height or both" unless (opts.keys & [:width, :height]).any?
+    raise InvalidOptions, "Geometry string is no longer supported as argument for resize()" if opts.is_a?(String)
+    raise InvalidOptions, "Pass width, height or both" unless (opts.keys & [:width, :height]).any?
     opts.each_pair { |k,v|  raise InvalidOptions, "#{k.inspect} cannot be set to nil" if v.nil? }
     
     if opts[:width] && opts[:height] && opts[:fill]
@@ -88,6 +81,7 @@ class ImageProc
     else
       raise "This should never happen"
     end
+    to_path
   end
   
   # Resize an image fitting the biggest side of it to the side of a square. A must for thumbs.

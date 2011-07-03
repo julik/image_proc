@@ -19,7 +19,7 @@ class TestQuickProcessWithOptions < Test::Unit::TestCase
     opts = {:height=>75, :fill=>true}
     begin
       assert_nothing_raised do
-        path, w, h = ImageProc.resize_with_options(source, dest, opts)
+        path, w, h = ImageProc.resize(source, dest, opts)
       end
     ensure
       File.unlink(dest) rescue nil
@@ -31,14 +31,14 @@ class TestQuickProcessWithOptions < Test::Unit::TestCase
       source = File.dirname(__FILE__) + '/input/horizontal.jpg'
       dest = File.dirname(__FILE__) + '/output/resized.jpg'
       opts = {:too => 4, :doo => 10}
-      ImageProc.resize_with_options(source, dest, opts)
+      ImageProc.resize(source, dest, opts)
     end
 
     assert_raise(ImageProc::InvalidOptions) do
       source = File.dirname(__FILE__) + '/input/horizontal.jpg'
       dest = File.dirname(__FILE__) + '/output/resized.jpg'
       opts = {}
-      ImageProc.resize_with_options(source, dest, opts)
+      ImageProc.resize(source, dest, opts)
     end
   end
 end
@@ -63,13 +63,13 @@ if RUBY_PLATFORM =~ /darwin/i
   
     def test_sips_does_not_grok_pngs
       assert_raise(ImageProc::FormatUnsupported) do
-        @processor.resize(INPUTS + '/horizontal.gif', OUTPUTS + '/horizontal.gif', "100x100")
+        @processor.resize(INPUTS + '/horizontal.gif', OUTPUTS + '/horizontal.gif', :width=> 100, :height => 100)
       end
     end
   
     def test_sips_does_not_grok_gifs
       assert_raise(ImageProc::FormatUnsupported) do
-        @processor.resize(INPUTS + '/horizontal.png', OUTPUTS + '/horizontal.png', "100x100")
+        @processor.resize(INPUTS + '/horizontal.png', OUTPUTS + '/horizontal.png', :width=> 100, :height => 100)
       end
     end
   

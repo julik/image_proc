@@ -36,7 +36,8 @@ module ResizeTestHelper
   
   def test_resize_raises_when_trying_to_overwrite
     assert_raise(ImageProc::NoOverwrites) do
-      @processor.resize INPUTS + '/' + @landscapes[0], INPUTS + '/' + @portraits[0], "100x100"
+      @processor.resize INPUTS + '/' + @landscapes[0], INPUTS + '/' + @portraits[0], 
+        :width => 100, :height => 100
     end
   end
   
@@ -44,7 +45,8 @@ module ResizeTestHelper
     missing_input = "/tmp/___imageproc_missing.jpg"
     assert !File.exist?(missing_input)
     assert_raise(ImageProc::MissingInput) do
-      @processor.resize missing_input, OUTPUTS + '/zeoutput.jpg', "100x100"
+      @processor.resize missing_input, OUTPUTS + '/zeoutput.jpg', 
+        :width => 100, :height => 100
     end
   end
   
@@ -54,7 +56,7 @@ module ResizeTestHelper
     
     assert !File.exist?(File.dirname(missing_output))
     assert_raise(ImageProc::NoDestinationDir) do
-      @processor.resize from, missing_output, "100x100"
+      @processor.resize from, missing_output, :width => 100, :height => 100
     end    
   end
   
@@ -147,7 +149,7 @@ module ResizeTestHelper
   
   def test_resize_is_alias_for_fit_with_geometry_string
      with_each_horizontal_path_and_name do | source, name |
-       assert_nothing_raised { @processor.resize(source, OUTPUTS + '/' + name, "300x300") }
+       assert_nothing_raised { @processor.resize(source, OUTPUTS + '/' + name, :width => 300, :height => 300) }
      
        result_p = OUTPUTS + '/' + File.basename(source)
        assert File.exist?(result_p), "#{result_p} should have been created"
@@ -156,8 +158,7 @@ module ResizeTestHelper
    
      with_each_vertical_path_and_name do | source, name |
        assert_nothing_raised do
-          path = @processor.resize(source, OUTPUTS + '/' + name, "300x300")
-          assert_kind_of String, path, "ImageProc#resize is legacy so it should return the path and nothing else"
+          path = @processor.resize(source, OUTPUTS + '/' + name, :width => 300, :height => 300)
           assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result"
        end
        

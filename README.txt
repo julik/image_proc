@@ -2,6 +2,11 @@
 
 * http://wiretap.rubyforge.org/image_proc
 
+== SYNPOSIS
+
+    require "image_proc"
+    ImageProc.resize("/tmp/source_file.jpg", :width => 128, :height => 200, :fit => :inside)
+
 == DESCRIPTION:
 
 A no-frills image resizer, with pluggable backends. No extra software required on OS X
