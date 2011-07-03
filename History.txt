@@ -1,8 +1,16 @@
+=== 1.0.2 / 2009-01-09
+
+* Allow nil keys in ImageProc.resize() options and just scrub them.
+
 === 1.0.1 / 2009-01-09
+
+* Remove the old geometry string API
+
+=== 0.1.1 / 2009-01-09
 
 * Small updates to Hoe and other software rot prevention
 
-=== 1.0.0 / 2009-01-09
+=== 0.1.0 / 2009-01-09
 
 * 1 major enhancement
 

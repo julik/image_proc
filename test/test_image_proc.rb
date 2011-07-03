@@ -13,6 +13,7 @@ require 'image_proc'
 #end
 
 class TestQuickProcessWithOptions < Test::Unit::TestCase
+  
   def test_resize_with_options
     source = File.dirname(__FILE__) + '/input/horizontal.jpg'
     dest = File.dirname(__FILE__) + '/output/resized.jpg'
@@ -33,12 +34,25 @@ class TestQuickProcessWithOptions < Test::Unit::TestCase
       opts = {:too => 4, :doo => 10}
       ImageProc.resize(source, dest, opts)
     end
-
+    
     assert_raise(ImageProc::InvalidOptions) do
       source = File.dirname(__FILE__) + '/input/horizontal.jpg'
       dest = File.dirname(__FILE__) + '/output/resized.jpg'
       opts = {}
       ImageProc.resize(source, dest, opts)
+    end
+  end
+  
+  def test_resize_with_nil_options
+    source = File.dirname(__FILE__) + '/input/horizontal.jpg'
+    dest = File.dirname(__FILE__) + '/output/resized.jpg'
+    opts = {:height => 75, :fill => nil, :width => nil}
+    begin
+      assert_nothing_raised do
+        path = ImageProc.resize(source, dest, opts)
+      end
+    ensure
+      File.unlink(dest) rescue nil
     end
   end
 end

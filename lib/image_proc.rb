@@ -9,7 +9,7 @@ require 'open3'
 # The whole idea is: a backend does not have to support cropping (we don't do it), it has only to be able to resize,
 # and a backend should have 2 public methods. That's the game.
 class ImageProc
-  VERSION = '1.0.0'
+  VERSION = '1.0.2'
 
   class Error < RuntimeError; end
   class MissingInput < Error; end
@@ -64,11 +64,15 @@ class ImageProc
   # Resizes with specific options passed as a hash, and return the destination path to the resized image
   #   ImageProc.resize "/tmp/foo.jpg", "bla.jpg", :width => 120, :height => 30
   def resize(from_path, to_path, opts = {})
-    # raise InvalidOptions,
-    #   "The only allowed options are :width, :height and :fill" if (opts.keys - [:width, :height, :fill]).any?
-    raise InvalidOptions, "Geometry string is no longer supported as argument for resize()" if opts.is_a?(String)
+    if opts.is_a?(String)
+      STDERR.puts "String argument to resize() is really deprecated"
+      w, h = opts.scan(/^\d+x\d+$/).to_a.flatten
+      return resize(from_path, to_path, :width => w, :height => h)
+    end
+    
+    remove_nil_values!(opts)
+    raise InvalidOptions, "The only allowed options are :width, :height and :fill" if (opts.keys - [:width, :height, :fill]).any?
     raise InvalidOptions, "Pass width, height or both" unless (opts.keys & [:width, :height]).any?
-    opts.each_pair { |k,v|  raise InvalidOptions, "#{k.inspect} cannot be set to nil" if v.nil? }
     
     if opts[:width] && opts[:height] && opts[:fill]
       resize_fit_fill(from_path, to_path, opts[:width], opts[:height])
@@ -187,6 +191,11 @@ class ImageProc
   end
   
   private
+  
+    def remove_nil_values!(from_hash)
+      from_hash.keys.map{|k| from_hash.delete(k) if from_hash[k].nil? }
+    end
+    
     def force_keys!(in_hash, *keynames)
       unless (in_hash.keys & keynames).length == keynames.length
         raise Error, "This method requires #{keynames.join(', ')}" 
