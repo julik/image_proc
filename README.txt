@@ -5,7 +5,7 @@
 == SYNPOSIS
 
     require "image_proc"
-    ImageProc.resize("/tmp/source_file.jpg", :width => 128, :height => 200, :fit => :inside)
+    ImageProc.resize("/tmp/source_file.jpg", :width => 128, :height => 200, :fill => :true)
 
 == DESCRIPTION:
 
