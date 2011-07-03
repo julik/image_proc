@@ -1,3 +1,7 @@
+=== 1.0.3 / 2009-01-09
+
+* Ensure the destination path is always returned
+
 === 1.0.2 / 2009-01-09
 
 * Allow nil keys in ImageProc.resize() options and just scrub them.

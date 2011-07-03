@@ -20,7 +20,8 @@ class TestQuickProcessWithOptions < Test::Unit::TestCase
     opts = {:height=>75, :fill=>true}
     begin
       assert_nothing_raised do
-        path, w, h = ImageProc.resize(source, dest, opts)
+        path = ImageProc.resize(source, dest, opts)
+        assert_equal dest, path
       end
     ensure
       File.unlink(dest) rescue nil
@@ -50,6 +51,7 @@ class TestQuickProcessWithOptions < Test::Unit::TestCase
     begin
       assert_nothing_raised do
         path = ImageProc.resize(source, dest, opts)
+        assert_equal dest, path
       end
     ensure
       File.unlink(dest) rescue nil

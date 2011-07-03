@@ -18,6 +18,7 @@ class ImageProc
   class NoOverwrites < Error; end
   class FormatUnsupported < Error; end
   class InvalidOptions < Error; end
+  class MissingOutput < Error; end
   
   HARMLESS = []
   class << self
@@ -61,18 +62,27 @@ class ImageProc
     end
   end
   
-  # Resizes with specific options passed as a hash, and return the destination path to the resized image
+  def resize_with_geom_string(from_path, to_path, str) #:nodoc:
+    w, h = opts.scan(/^\d+x\d+$/).to_a.flatten
+    resize(from_path, to_path, :width => w, :height => h)
+    result_w, result_h = get_bounds(to_path)
+    [to_path, result_w, result_h]
+  end
+  
+  # Resizes with specific options passed as a hash.
+  # It returns the destination path to the resized image. If you need to know the resulting size
+  # of the image just call a ImageProc.get_bounds on the result path
+  #
   #   ImageProc.resize "/tmp/foo.jpg", "bla.jpg", :width => 120, :height => 30
   def resize(from_path, to_path, opts = {})
     if opts.is_a?(String)
       STDERR.puts "String argument to resize() is really deprecated"
-      w, h = opts.scan(/^\d+x\d+$/).to_a.flatten
-      return resize(from_path, to_path, :width => w, :height => h)
+      resize_with_geom_string(from_path, to_path, opts)
     end
     
     remove_nil_values!(opts)
+    
     raise InvalidOptions, "The only allowed options are :width, :height and :fill" if (opts.keys - [:width, :height, :fill]).any?
-    raise InvalidOptions, "Pass width, height or both" unless (opts.keys & [:width, :height]).any?
     
     if opts[:width] && opts[:height] && opts[:fill]
       resize_fit_fill(from_path, to_path, opts[:width], opts[:height])
@@ -83,9 +93,11 @@ class ImageProc
     elsif opts[:height]
       resize_fit_height(from_path, to_path, opts[:height])
     else
-      raise "This should never happen"
+      raise InvalidOptions, "Pass width, height or both"
     end
-    to_path
+    raise MissingOutput unless File.exist?(to_path)
+    
+    return to_path
   end
   
   # Resize an image fitting the biggest side of it to the side of a square. A must for thumbs.
@@ -297,6 +309,7 @@ ImageProc.keep_quiet do
     # -Z pixelsWH --resampleHeightWidthMax pixelsWH
     FORMAT_MAP = { ".tif" => "tiff", ".png" => "png", ".tif" => "tiff", ".gif" => "gif" }
     HARMLESS = [/XRefStm encountered but/, /CGColor/]
+    
     def process_exact
       fmt = detect_source_format
       wrap_stderr("sips -s format #{fmt} --resampleHeightWidth #{@target_h} #{@target_w} #{@source} --out '#{@dest}'")
