@@ -4,12 +4,12 @@ require 'open3'
 # design. Sort of like the Processors in attachment_fu but less. Less.
 #
 #    width, height = ImageProc.get_bounds("image.png")
-#    thumb_filename = ImageProc.resize("image.png", "thumb.png", :width => 50. :height => 50)
+#    destination_path = ImageProc.resize("image.png", "thumb.png", :width => 50. :height => 50)
 #
 # The whole idea is: a backend does not have to support cropping (we don't do it), it has only to be able to resize,
 # and a backend should have 2 public methods. That's the game.
 class ImageProc
-  VERSION = '1.0.2'
+  VERSION = '2.0.0'
 
   class Error < RuntimeError; end
   class MissingInput < Error; end
@@ -62,8 +62,8 @@ class ImageProc
     end
   end
   
-  def resize_with_geom_string(from_path, to_path, str) #:nodoc:
-    w, h = opts.scan(/^\d+x\d+$/).to_a.flatten
+  def resize_with_geom_string(from_path, to_path, geom_str) #:nodoc:
+    w, h = geom_str.scan(/^(\d+)x(\d+)$/).to_a.flatten.map{|e| e.to_i }
     resize(from_path, to_path, :width => w, :height => h)
     result_w, result_h = get_bounds(to_path)
     [to_path, result_w, result_h]
@@ -87,7 +87,7 @@ class ImageProc
     if opts[:width] && opts[:height] && opts[:fill]
       resize_fit_fill(from_path, to_path, opts[:width], opts[:height])
     elsif opts[:width] && opts[:height]
-      resize_fit(from_path, to_path, opts[:width], opts[:height])
+      resize_fit_both(from_path, to_path, opts[:width], opts[:height])
     elsif opts[:width]
       resize_fit_width(from_path, to_path, opts[:width])
     elsif opts[:height]
@@ -110,6 +110,7 @@ class ImageProc
     validate_input_output_files(from_path, to_path)
     @target_w, @target_h = to_width, to_height
     resetting_state_afterwards { process_exact }
+    to_path
   end
 
   # Resize an image fitting it into a rect.
@@ -117,6 +118,7 @@ class ImageProc
     validate_input_output_files(from_path, to_path)
     @target_w, @target_h = fit_sizes(get_bounds(from_path), :width => to_width, :height => to_height)
     resetting_state_afterwards { process_exact }
+    to_path
   end
   alias_method :resize_fit, :resize_fit_both
 
@@ -126,6 +128,7 @@ class ImageProc
     
     @target_w, @target_h = fit_sizes get_bounds(from_path), :width => width
     resetting_state_afterwards { process_exact }
+    to_path
   end
 
   # Same as resize_fit_width  
@@ -133,6 +136,7 @@ class ImageProc
     validate_input_output_files(from_path, to_path)
     @target_w, @target_h = fit_sizes(get_bounds(from_path), :height => height)
     resetting_state_afterwards { process_exact }
+    to_path
   end
 
   # Will resize the image so that it's part always fills the rect of +width+ and +height+
@@ -142,6 +146,7 @@ class ImageProc
     validate_input_output_files(from_path, to_path)
     @target_w, @target_h = fit_sizes_with_crop get_bounds(from_path), :height => height, :width => width
     resetting_state_afterwards { process_exact }
+    to_path
   end
   
   # Will fit the passed array of [input_width, input_heitght] proportionally and return an array of
@@ -225,7 +230,6 @@ class ImageProc
     # cleanup any stale ivars and return the path to result and the resulting bounds
     def resetting_state_afterwards
       begin
-        @dest = @dest % [@target_w, @target_h] if File.basename(@dest).include?('%')
         kept = [@dest, @target_w, @target_h]; yield
       ensure
         @source, @dest, @source_w, @dest_w, @source_h, @dest_h = nil

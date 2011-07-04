@@ -66,7 +66,7 @@ module ResizeTestHelper
 
     sources.each_with_index do | source, index |
       assert_nothing_raised do
-        path, w, h  = @processor.resize_exact(source, OUTPUTS + '/' + names[index], 65, 65)
+        path  = @processor.resize_exact(source, OUTPUTS + '/' + names[index], 65, 65)
         assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result as first ret"
       end
       
@@ -79,7 +79,7 @@ module ResizeTestHelper
   def test_resize_fitting_proportionally_into_square
     with_each_horizontal_path_and_name do | source, name |
       assert_nothing_raised do
-        path, w, h  = @processor.resize_fit(source, OUTPUTS + '/' + name, 300, 300)
+        path  = @processor.resize_fit(source, OUTPUTS + '/' + name, 300, 300)
         assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result as first ret"
       end
       
@@ -100,7 +100,7 @@ module ResizeTestHelper
   def test_fit_square_is_alias_for_proportional_resize
     with_each_horizontal_path_and_name do | source, name |
       assert_nothing_raised do
-        path, w, h  = @processor.resize_fit_square(source, OUTPUTS + '/' + name, 300)
+        path  = @processor.resize_fit_square(source, OUTPUTS + '/' + name, 300)
         assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result as first ret"
       end
       
@@ -129,22 +129,11 @@ module ResizeTestHelper
          path, w, h  = @processor.resize_fit(source, OUTPUTS + '/' + name, 100, 20)
          assert_equal OUTPUTS + '/' + File.basename(source), path, "The proc should return the path to the result as first ret"
        end
-
+       
        result_p = OUTPUTS + '/' + File.basename(source)
        assert File.exist?(result_p), "#{result_p} should have been created"
        assert_equal [13, 20], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been fit into rect proortionally"
      end
-  end
-  
-  def test_replaces_wildcards_in_filenames_after_resizing
-    source = INPUTS + '/' + @landscapes[0]
-    with_wildcards = OUTPUTS + '/resized_%dx%d' + File.extname(@landscapes[0])
-    reference_path = with_wildcards % [300, 200]
-    assert_nothing_raised do
-      path, w, h  = @processor.resize_fit(source, with_wildcards, 300, 300)
-      assert_equal path, reference_path, "The wildcards should be replaced with computed width and height and the file saved"
-      assert_equal [300, 200], get_bounds(reference_path)
-    end
   end
   
   def test_resize_is_alias_for_fit_with_geometry_string
@@ -210,8 +199,11 @@ module ResizeTestHelper
       end
       
       result_p = OUTPUTS + '/' + File.basename(source)
-      assert File.exist?(result_p), "#{result_p} should have been created"
-      assert_equal [323, 485], get_bounds(result_p), "The image of #{get_bounds(source).join("x")} should have been fit into width"
+      
+      assert File.exist?(result_p),
+        "#{result_p} should have been created"
+      assert_equal [323, 485], get_bounds(result_p), 
+        "The image of #{get_bounds(source).join("x")} should have been fit into width"
     end
   end
   

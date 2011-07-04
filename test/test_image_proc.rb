@@ -3,14 +3,17 @@ require 'fileutils'
 require 'resize_test_helper'
 require 'image_proc'
 
-#class TestQuickProcessViaClassWithGeomString < Test::Unit::TestCase
-#  def test_works
-#    source = File.dirname(__FILE__) + '/input/horizontal.jpg'
-#    dest = File.dirname(__FILE__) + '/output/resized.jpg'
-#    assert_nothing_raised { ImageProc.resize(source, dest, "50x50") }
-#    FileUtils.rm dest
-#  end
-#end
+# This will go away.
+class TestQuickProcessViaClassWithGeomString < Test::Unit::TestCase
+  def test_works
+    source = File.dirname(__FILE__) + '/input/horizontal.jpg'
+    dest = File.dirname(__FILE__) + '/output/resized.jpg'
+    ImageProc.resize_with_geom_string(source, dest, "50x50")
+    assert_equal [50,33], ImageProc.get_bounds(dest)
+  ensure
+    FileUtils.rm(dest) if File.exist?(dest)
+  end
+end
 
 class TestQuickProcessWithOptions < Test::Unit::TestCase
   
