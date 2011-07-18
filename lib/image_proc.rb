@@ -9,7 +9,7 @@ require 'open3'
 # The whole idea is: a backend does not have to support cropping (we don't do it), it has only to be able to resize,
 # and a backend should have 2 public methods. That's the game.
 class ImageProc
-  VERSION = '2.0.0'
+  VERSION = '2.1.0'
 
   class Error < RuntimeError; end
   class MissingInput < Error; end
@@ -42,7 +42,7 @@ class ImageProc
     
     # Tries to detect the best engine available
     def detect_engine
-      if (`which convert` =~ /^\// )
+      if ImageProcConvert.available?
         ImageProcConvert
       elsif RUBY_PLATFORM =~ /darwin/i
         ImageProcSips
@@ -267,13 +267,38 @@ end
 
 ImageProc.keep_quiet do
   class ImageProcConvert < ImageProc
+    class << self
+      attr_accessor :convert_bin
+      
+      def available?
+        paths = %w( /usr/local/bin /opt/local/bin /usr/bin /bin)
+        begin
+          result_path = `which convert`.strip
+          return false unless result_path =~ /^\//
+          
+          self.convert_bin = File.dirname(result_path)
+          return true
+        rescue Errno::ENOENT # Path might be not munged
+          paths.each do | p |
+            if File.exist?(File.join(p, 'convert'))
+              self.convert_bin = p
+              return true
+            end
+          end
+        end
+        
+        return false #nope, not avaliable?
+      end
+      
+    end
+    
     HARMLESS = [/unknown field with tag/]
     def process_exact
-      wrap_stderr("convert -filter Gaussian -resize #{@target_w}x#{@target_h}! #{@source} #{@dest}")
+      wrap_stderr("#{self.class.convert_bin}/convert -filter Gaussian -resize #{@target_w}x#{@target_h}! #{@source} #{@dest}")
     end
   
     def get_bounds(of)
-      wrap_stderr("identify #{of}").scan(/(\d+)x(\d+)/)[0].map{|e| e.to_i }
+      wrap_stderr("#{self.class.convert_bin}/identify #{of}").scan(/(\d+)x(\d+)/)[0].map{|e| e.to_i }
     end
   end
 end

@@ -100,10 +100,15 @@ if(`which convert`)
   class TestImageProcConvert < Test::Unit::TestCase
     def setup
       super
+      ImageProcConvert.available?
       @processor = ImageProcConvert.new
     end
   
     include ResizeTestHelper
+    
+    def test_avail
+      assert ImageProcConvert.available?
+    end
   end
 end
 

@@ -1,3 +1,7 @@
+=== 2.1.0 / 2011-07-19
+
+* Check if the convert bin is available and try to intuit it's path
+
 === 2.0.0 / 2009-01-09
 
 * Make all methods return the destination path only
