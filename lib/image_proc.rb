@@ -9,7 +9,7 @@ require 'open3'
 # The whole idea is: a backend does not have to support cropping (we don't do it), it has only to be able to resize,
 # and a backend should have 2 public methods. That's the game.
 class ImageProc
-  VERSION = '2.1.0'
+  VERSION = '2.1.1'
 
   class Error < RuntimeError; end
   class MissingInput < Error; end
@@ -294,7 +294,7 @@ ImageProc.keep_quiet do
     
     HARMLESS = [/unknown field with tag/]
     def process_exact
-      wrap_stderr("#{self.class.convert_bin}/convert -filter Gaussian -resize #{@target_w}x#{@target_h}! #{@source} #{@dest}")
+      wrap_stderr("#{self.class.convert_bin}/convert -filter  Lanczos -resize #{@target_w}x#{@target_h}! -strip #{@source} #{@dest}")
     end
   
     def get_bounds(of)
